@@ -1,28 +1,54 @@
 {
   "expo": {
-    "name": "chatSphereMobile",
-    "slug": "chatSphereMobile",
+    "name": "Chat Sphere",
+    "slug": "Chat-Sphere-Mobile",
+    "scheme": "chat-sphere",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "plugins": [
+      "expo-apple-authentication",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "$(PRODUCT_NAME) would like to access your photo library to help you share pictures in your chats."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "$(PRODUCT_NAME) would like to access your camera to help you share pictures and videos in your chats and to scan QR codes.",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
+    ],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mohaa204080.ChatSphereMobile",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.mohaa204080.ChatSphereMobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1835a1b9-289f-4e29-a259-a26e33b0d22c"
+      }
     }
   }
 }

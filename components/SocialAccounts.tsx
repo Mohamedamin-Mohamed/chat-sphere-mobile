@@ -1,6 +1,7 @@
 import {AuthSessionResult} from "expo-auth-session"
 import {StyleSheet, Text, View} from "react-native"
 import Icon from "react-native-vector-icons/FontAwesome"
+import React from "react";
 
 interface SocialAccountsProps {
     googlePromptAsync: () => Promise<AuthSessionResult>,

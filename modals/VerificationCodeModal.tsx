@@ -1,28 +1,61 @@
-import {Dispatch, SetStateAction, useCallback, useRef, useState} from "react";
-import {ActivityIndicator, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View, Image} from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import {useCallback, useRef, useState} from "react";
+import {Modal, StyleSheet, TextInput, View} from "react-native";
+import Toast from "react-native-toast-message";
+import {router} from "expo-router";
+
 import verifyCode from "../api/verifyCode";
+import emailLookup from "../api/emailLookup";
+import resetPassword from "../api/resetPassword";
+
+import emailValidation from "../utils/emailValidation";
+
+import VerificationUI from "../components/VerificationUI";
+import PasswordResetUI from "../components/PasswordResetUI";
 
 type VerificationCodeState = Record<number, string>;
 
-interface VerificationCodeModalProps {
-    handleModalDisplay: () => void,
-    email: string,
-    setPasswordResetModalDisplay: Dispatch<SetStateAction<boolean>>
+interface Passwords {
+    password: string;
+    confirmPassword: string;
 }
 
-const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
-                                                                      handleModalDisplay,
-                                                                      email, setPasswordResetModalDisplay
-                                                                  }) => {
+interface VerificationCodeModalProps {
+    email: string;
+    handleModalDisplay: () => void;
+    onCancel: () => void;
+}
+
+const VerificationCodeModal = ({
+                                   email,
+                                   handleModalDisplay,
+                                   onCancel
+                               }: VerificationCodeModalProps) => {
+    // State management
     const [verificationCode, setVerificationCode] = useState<VerificationCodeState>({});
+    const [passwordResetModal, setPasswordResetModal] = useState(false);
     const [disabled, setDisabled] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const otp = require('../assets/images/otp.png')
+    const [verificationError, setVerificationError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
+    const [passwords, setPasswords] = useState<Passwords>({
+        password: "",
+        confirmPassword: ""
+    });
 
+    // Refs
     const inputRefs = useRef<Array<TextInput | null>>([]);
 
+    // Display toast message
+    const showToast = (message: string, type: string) => {
+        Toast.show({
+            type: type,
+            text1: message,
+            onShow: () => setDisabled(true),
+            onHide: () => setDisabled(false)
+        });
+    };
+
+    // Handle verification code input
     const handleChange = useCallback((val: string, index: number) => {
         if (!/^\d*$/.test(val)) return; // only allow digits
 
@@ -39,6 +72,7 @@ const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
             return newState;
         });
 
+        // Move focus to next/previous input
         if (val && inputRefs.current[index + 1]) {
             inputRefs.current[index + 1]?.focus();
         } else if (!val && inputRefs.current[index - 1]) {
@@ -46,87 +80,172 @@ const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
         }
     }, []);
 
-    const handleCodeVerification = async () => {
-        const code = Object.values(verificationCode).join("")
-        if (code.length !== 6) {
-            setError('Please enter all 6 digits')
-            return
-        }
-        setError('')
-        try {
-            setLoading(true)
-            const response = await verifyCode(email, code, new AbortController());
-
-            if (!response.ok) {
-                const message = await response.text()
-                setError(message)
-            } else {
-                handleModalDisplay()
-                setPasswordResetModalDisplay(true)
-            }
-        } catch (err) {
-            console.error(err)
-        } finally {
-            setLoading(false)
-        }
-    };
-
     const handleBackspace = (index: number, nativeEvent: { key: string }) => {
         if (nativeEvent.key === "Backspace" && !verificationCode[index]) {
             handleChange("", index);
         }
     };
+
+    // API calls
+    const handleEmailLookup = async () => {
+        if (!email) {
+            showToast('Email is required', 'error');
+            return;
+        }
+
+        if (!emailValidation(email)) {
+            showToast('Email is not valid', 'error');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const response = await emailLookup(email, new AbortController());
+            const message = await response.text();
+
+            if (!response.ok) {
+                showToast(message, 'error');
+            } else {
+                showToast(message, 'success');
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCodeVerification = async () => {
+        const code = Object.values(verificationCode).join("");
+        if (code.length !== 6) {
+            setVerificationError('Please enter all 6 digits');
+            return;
+        }
+
+        setVerificationError('');
+
+        try {
+            setLoading(true);
+            const response = await verifyCode(email, code, new AbortController());
+
+            if (!response.ok) {
+                const message = await response.text();
+                setVerificationError(message);
+            } else {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Reset your password',
+                    onShow: () => setDisabled(true),
+                    onHide: () => {
+                        setDisabled(false)
+                        setPasswordResetModal(true); // Display the modal after toast is hidden
+                    }
+                });
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOtpRegeneration = async () => {
+        setVerificationCode({});
+        setVerificationError("");
+        inputRefs.current[0]?.focus();
+        await handleEmailLookup();
+    };
+
+    // Password management
+    const handlePasswordChange = (key: string, val: string) => {
+        setPasswords((prevState) => ({
+            ...prevState,
+            [key]: val,
+        }));
+    };
+
+    const validatePassword = (password: string): boolean => {
+        const hasLetter = /[a-zA-Z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+
+        return password.length >= 16 || (password.length >= 8 && hasLetter && hasNumber);
+    };
+
+    const handleResetPassword = async () => {
+        setPasswordError("");
+
+        if (!passwords.password || !passwords.confirmPassword) {
+            setPasswordError("Passwords are required");
+            return;
+        }
+
+        if (passwords.password !== passwords.confirmPassword) {
+            setPasswordError("Passwords don't match");
+            return;
+        }
+
+        if (!validatePassword(passwords.password)) {
+            setPasswordError("Password must be at least 16 characters, or 8 characters with one number and one letter.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const request = {email: email, password: passwords.password};
+            const response = await resetPassword(request, new AbortController());
+            const succeeded = response.ok;
+            const message = await response.text();
+
+            Toast.show({
+                type: succeeded ? "success" : "error",
+                text1: message,
+                ...(succeeded && {text2: 'Redirecting'}),
+                onShow: () => setDisabled(true),
+                onHide: () => {
+                    handleModalDisplay();
+                    setDisabled(false);
+                    succeeded && router.replace("/SignIn")
+                }
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <Modal transparent={true} visible={true} animationType="slide">
+            <Toast position="top"/>
             <View style={styles.modalOverlay}>
-                <TouchableOpacity style={StyleSheet.absoluteFillObject} onPress={handleModalDisplay}/>
                 <View style={styles.modalContent}>
-                    <Icon name="close" size={26} style={{marginLeft: "auto"}} onPress={handleModalDisplay}/>
-                    <>
-                        <Image source={otp} style={styles.image} />
-                        <Text style={styles.headerText}> Verify</Text>
-                    <Text style={styles.subHeaderText}>Your code was sent you via email</Text>
-                </>
-                <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginVertical: 10,
-                    gap: 10
-                }}>
-                    {Array(6).fill('').map((_, index) => (
-                        <TextInput
-                            key={index}
-                            keyboardType="number-pad"
-                            maxLength={1}
-                            style={[
-                                styles.verificationInput,
-                                verificationCode[index] && styles.filledInput
-                            ]}
-                            value={verificationCode[index]?.toString()}
-                            onChangeText={val => handleChange(val, index)}
-                            onKeyPress={({nativeEvent}) => handleBackspace(index, nativeEvent)}
-                            ref={el => inputRefs.current[index] = el}
+                    {!passwordResetModal ? (
+                        <VerificationUI
+                            verificationCode={verificationCode}
+                            loading={loading}
+                            disabled={disabled}
+                            verificationError={verificationError}
+                            inputRefs={inputRefs}
+                            onCancel={onCancel}
+                            handleChange={handleChange}
+                            handleBackspace={handleBackspace}
+                            handleCodeVerification={handleCodeVerification}
+                            handleOtpRegeneration={handleOtpRegeneration}
                         />
-                    ))}
-                </View>
-                {error && <Text style={styles.errorText}>{error}</Text>}
-                <TouchableOpacity disabled={disabled} style={styles.verifyButton} activeOpacity={0.8}
-                                  onPress={handleCodeVerification}>
-                    {loading ? <ActivityIndicator size="small" color="white"/> :
-                        <Text style={styles.verifyText}>Verify</Text>}
-                </TouchableOpacity>
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>Don't receive code?</Text>
-                    <TouchableOpacity onPress={handleModalDisplay} activeOpacity={0.8}>
-                        <Text style={[styles.footerText, styles.linkText]}>Request again</Text>
-                    </TouchableOpacity>
+                    ) : (
+                        <PasswordResetUI
+                            loading={loading}
+                            onCancel={onCancel}
+                            disabled={disabled}
+                            passwordError={passwordError}
+                            handlePasswordChange={handlePasswordChange}
+                            handleResetPassword={handleResetPassword}
+                        />
+                    )}
                 </View>
             </View>
-        </View>
-</Modal>
-)
-    ;
+        </Modal>
+    );
 };
 
 const styles = StyleSheet.create({
@@ -136,71 +255,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: 'rgba(0, 0, 0, 0.5)'
     },
-    filledInput: {
-        borderColor: "#085bd8",
-        borderWidth: 1
-    },
     modalContent: {
         backgroundColor: "white",
         width: "90%",
         borderRadius: 4,
         padding: 20
-    },
-    image: {
-        width: "80%",
-        height: 200
-    },
-    verificationInput: {
-        borderColor: "gray",
-        borderRadius: 4,
-        borderWidth: 0.4,
-        padding: 10,
-        width: 40,
-        textAlign: 'center'
-    },
-    headerText: {
-        fontSize: 24,
-        textAlign: "center",
-        fontWeight: '600',
-    },
-    subHeaderText: {
-        textAlign: 'center',
-        fontSize: 18,
-        fontWeight: "300"
-    },
-    verifyButton: {
-        backgroundColor: "#085bd8",
-        padding: 15,
-        borderRadius: 8,
-        marginVertical: 16,
-        alignSelf: 'center'
-    },
-    verifyText: {
-        color: "white",
-        fontSize: 16,
-        fontWeight: "bold",
-    },
-    footer: {
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 5,
-        marginTop: 20
-    },
-    errorText: {
-        color: 'red',
-        textAlign: 'center',
-        marginTop: 8
-    },
-    footerText: {
-        textAlign: "center",
-        fontSize: 16
-    },
-    linkText: {
-        fontWeight: "bold",
-        color: "#5d8edf",
-        fontSize: 16,
-        textDecorationLine: "underline"
     }
 });
 

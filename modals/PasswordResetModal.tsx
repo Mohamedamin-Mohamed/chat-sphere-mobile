@@ -72,7 +72,7 @@ const PasswordResetModal = ({handleModalDisplay, email}: { handleModalDisplay: (
     };
 
     return (
-        <Modal transparent={true} visible={true} animationType="slide">
+        <Modal animationType="slide">
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                     <Image source={reset} style={styles.image}/>
@@ -112,7 +112,6 @@ const PasswordResetModal = ({handleModalDisplay, email}: { handleModalDisplay: (
                         </TouchableOpacity>
                     </View>
                 </View>
-                <Toast/>
             </View>
         </Modal>
     );
