@@ -6,6 +6,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useEffect, useState} from "react";
+import {CommonActions} from "@react-navigation/native";
 
 interface DrawerItemType {
     icon: string,
@@ -53,7 +54,20 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         const user = await AsyncStorage.getItem('user') ?? ''
         setUser(user)
     }
+
     const handleSignOut = () => {
+        navigation.dispatch(CommonActions.reset({
+            index: 0,
+            routes: [
+                {
+                    name: '(auth)',
+                    state: {
+                        index: 0,
+                        routes: [{name: ('Welcome')}]
+                    }
+                },
+            ]
+        }))
 
     }
 
