@@ -41,11 +41,8 @@ const VerificationCodeModal = ({
         password: "",
         confirmPassword: ""
     });
-
-    // Refs
     const inputRefs = useRef<Array<TextInput | null>>([]);
 
-    // Display toast message
     const showToast = (message: string, type: string) => {
         Toast.show({
             type: type,
@@ -86,7 +83,6 @@ const VerificationCodeModal = ({
         }
     };
 
-    // API calls
     const handleEmailLookup = async () => {
         if (!email) {
             showToast('Email is required', 'error');
