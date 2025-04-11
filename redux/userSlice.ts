@@ -1,6 +1,7 @@
-import {User} from "../../types/types";
+import {User} from "../types/types";
+import {createSlice} from "@reduxjs/toolkit";
 
-const initialRouteName: User = {
+const initialState: User = {
     email: '',
     name: '',
     oauthProvider: '',
@@ -8,4 +9,19 @@ const initialRouteName: User = {
     signupDate: ''
 }
 
-const userSlice = confi
+export const userSlice = createSlice({
+    name: 'userInfo',
+    initialState: initialState,
+    reducers: {
+        setUserInfo: (state, action) => {
+            return {...state, ...action.payload}
+        },
+        clearUserInfo: () => initialState
+    }
+})
+
+export default userSlice.reducer
+export const {setUserInfo, clearUserInfo} = userSlice.actions
+
+
+
