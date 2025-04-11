@@ -18,7 +18,8 @@ const DrawerList: DrawerItemType[] =
     [
         {icon: 'home', label: 'Home', navigateTo: 'home'},
         {icon: 'chat', label: 'Chat', navigateTo: 'chat'},
-        {icon: 'settings', label: 'Settings', navigateTo: 'settings'}
+        {icon: 'settings', label: 'Settings', navigateTo: 'settings'},
+        {icon: 'groups', label: 'Groups', navigateTo: 'groups'}
     ]
 
 interface DrawerLayoutProps {
