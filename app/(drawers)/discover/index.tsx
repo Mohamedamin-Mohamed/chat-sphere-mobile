@@ -1,4 +1,5 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Button, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 export default function Page() {
     return (
@@ -81,7 +82,9 @@ const styles = StyleSheet.create({
         fontWeight: "500",
         fontSize: 16,
     },
-    exploreText: {},
+    exploreText: {
+
+    },
     viewLikes: {
         backgroundColor: "#e2e1e1",
         borderRadius: 8,

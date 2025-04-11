@@ -15,12 +15,14 @@ import {useRef, useState} from "react";
 import SocialAccounts from "../../components/SocialAccounts";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import signIn from "../../api/signIn";
-import {Error} from "../../types/Types";
+import {Error} from "../../types/types";
 import emailValidation from "../../utils/emailValidation";
 import Toast from "react-native-toast-message";
 import {useNavigation, usePreventRemove} from "@react-navigation/native";
 import {signInWithApple, useGoogleOAuth} from "../../hooks/Oauth"
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {useDispatch} from "react-redux";
+import {setUserInfo} from "../../redux/userSlice";
 
 interface SignIn {
     email: string;
@@ -29,6 +31,7 @@ interface SignIn {
 
 const SignIn = () => {
     const {googlePromptAsync} = useGoogleOAuth()
+    const dispatch = useDispatch()
 
     const login = require('../../assets/images/login.png')
     const signInCompletedRef = useRef<boolean>(false);
@@ -78,13 +81,15 @@ const SignIn = () => {
                 signInCompletedRef.current = true;
 
                 await AsyncStorage.setItem('user', JSON.stringify(user))
+                dispatch(setUserInfo(user))
+
                 Toast.show({
                     type: 'success',
                     text1: message,
                     onShow: () => setDisabled(true),
                     onHide: () => {
                         setDisabled(false);
-                        router.replace('/home')
+                        router.replace('/chat')
                     }
                 });
             } else {

@@ -14,7 +14,7 @@ import {router, useNavigation} from "expo-router";
 import SocialAccounts from "../../components/SocialAccounts";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import React, {useRef, useState} from "react";
-import {User} from "../../types/Types";
+import {UserSignUp} from "../../types/types";
 import Toast from "react-native-toast-message";
 import emailValidation from "../../utils/emailValidation";
 import signUp from "../../api/signUp";
@@ -29,7 +29,7 @@ const SignUp = () => {
 
     const [disabled, setDisabled] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [signUpDetails, setSignUpDetails] = useState<User>({
+    const [signUpDetails, setSignUpDetails] = useState<UserSignUp>({
         email: '', name: '', password: ''
     })
 

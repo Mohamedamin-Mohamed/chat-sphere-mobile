@@ -1,5 +1,5 @@
-export default api => {
-    api.cache(true)
+export default function (api) {
+    api.cache(true);
     return {
         presets: ['babel-preset-expo'],
         plugins: [
@@ -15,7 +15,6 @@ export default api => {
                     verbose: false,
                 },
             ],
-            'react-native-reanimated/plugin'
         ],
-    }
-}
+    };
+};
