@@ -1,10 +1,11 @@
-import {SafeAreaView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import {useNavigation} from "expo-router";
+import {SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {router, useNavigation} from "expo-router";
 import {useSelector} from "react-redux";
 import {Buttons, RootState} from "../../../types/types";
 import {useState} from "react";
 import ViewProfileModal from "../../../modals/ViewProfileModal";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import {CommonActions} from "@react-navigation/native";
 
 
 const Page = () => {
@@ -12,6 +13,7 @@ const Page = () => {
         {icon: 'edit', name: 'Edit profile', navigateTo: 'editProfile'},
         {icon: 'contacts', name: 'Contacts', navigateTo: 'contacts'},
         {icon: 'settings', name: 'Settings', navigateTo: 'settings'},
+        {icon: 'live-help', name: 'Help Center', navigateTo: 'help'}
     ]
     const navigation = useNavigation()
     const userInfo = useSelector((state: RootState) => state.userInfo)
@@ -21,30 +23,53 @@ const Page = () => {
     const abbrevName = firstName + lastName
     const [viewProfileModal, setViewProfileModal] = useState(false)
 
+    const handleSignOut = () => {
+        navigation.dispatch(CommonActions.reset({
+            index: 0,
+            routes: [
+                {
+                    name: '(auth)',
+                    state: {
+                        index: 0,
+                        routes: [{name: ('Welcome')}]
+                    }
+                },
+            ]
+        }))
+    }
     return (
         <SafeAreaView style={[styles.container, {backgroundColor: viewProfileModal ? '#f5f5f5' : '#fff'}]}>
-            <View style={styles.childContainer}>
-                <Text style={styles.fullNameText}>{fullName}</Text>
-                <View style={styles.nameAbbrevView}>
-                    <Text style={styles.abbrevText}>{abbrevName}</Text>
+            <ScrollView>
+                <View style={styles.childContainer}>
+                    <Text style={styles.fullNameText}>{fullName}</Text>
+                    <View style={styles.nameAbbrevView}>
+                        <Text style={styles.abbrevText}>{abbrevName}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.viewProfile} activeOpacity={1}
+                                      onPress={() => setViewProfileModal(prevState => !prevState)}>
+                        <Text style={styles.viewProfileText}>View profile</Text>
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.viewProfile} activeOpacity={1}
-                                  onPress={() => setViewProfileModal(prevState => !prevState)}>
-                    <Text style={styles.viewProfileText}>View profile</Text>
-                </TouchableOpacity>
-            </View>
-            <View style={styles.buttonsView}>
-                {ButtonsList.map((ele, index) => (
-                        <TouchableOpacity style={styles.buttonsChildView} key={index} activeOpacity={0.8}>
-                        <View style={styles.iconsView}>
-                            <Icon name={ele.icon} size={20} color="black"/>
-                        </View>
+                <View style={styles.buttonsView}>
+                    {ButtonsList.map((ele, index) => (
+                        <TouchableOpacity style={styles.buttonsChildView} key={index} activeOpacity={0.8}
+                                          onPress={() => router.push(ele.navigateTo)}>
+                            <View style={styles.iconsView}>
+                                <Icon name={ele.icon} size={20} color="black"/>
+                            </View>
                             <Text style={{fontSize: 16}}>{ele.name}</Text>
                         </TouchableOpacity>
-                ))}
-            </View>
-            {viewProfileModal && <ViewProfileModal setViewProfileModal={setViewProfileModal} fullName={fullName}
-                                                   abbrevName={abbrevName}/>}
+                    ))}
+                    <TouchableOpacity style={styles.buttonsChildView} activeOpacity={0.8} onPress={handleSignOut}>
+                        <View style={styles.iconsView}>
+                            <Icon name="exit-to-app" size={20} color="black"/>
+                        </View>
+                        <Text style={{fontSize: 16}}>Sign out</Text>
+                    </TouchableOpacity>
+                </View>
+                {viewProfileModal && <ViewProfileModal setViewProfileModal={setViewProfileModal} fullName={fullName}
+                                                       abbrevName={abbrevName}/>}
+            </ScrollView>
         </SafeAreaView>
 
     )
@@ -52,7 +77,7 @@ const Page = () => {
 
 const styles = StyleSheet.create({
     container: {
-      flex: 1,
+        flex: 1,
     },
     childContainer: {
         marginTop: 80,
@@ -104,7 +129,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 16,
-        backgroundColor: '#cdcaca',
+        backgroundColor: '#e8e6e6',
         padding: 4
     }
 })

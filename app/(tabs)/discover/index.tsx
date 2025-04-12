@@ -1,7 +1,6 @@
-import {Button, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import Icon from "react-native-vector-icons/MaterialIcons";
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 
-export default function Page() {
+const Page = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.headline}>Welcome to ChatSphere – Your Campus Chat App!</Text>
@@ -31,15 +30,6 @@ export default function Page() {
                     </View>
                 </TouchableOpacity>
             </View>
-            {/*<View style={styles.features}>*/}
-            {/*    <Text style={styles.feature}>• Real-Time Messaging: Chat with classmates instantly.</Text>*/}
-            {/*    <Text style={styles.feature}>• Study Groups: Join or create groups for your courses.</Text>*/}
-            {/*    <Text style={styles.feature}>• File Sharing: Share notes, assignments, and more.</Text>*/}
-            {/*    <Text style={styles.feature}>• Privacy Controls: Control who can message you.</Text>*/}
-            {/*</View>*/}
-            {/*<Text style={styles.testimonial}>*/}
-            {/*    "ChatSphere made it so easy to organize study sessions with my classmates!" – Jane, University of XYZ*/}
-            {/*</Text>*/}
         </View>
     );
 }
@@ -82,9 +72,7 @@ const styles = StyleSheet.create({
         fontWeight: "500",
         fontSize: 16,
     },
-    exploreText: {
-
-    },
+    exploreText: {},
     viewLikes: {
         backgroundColor: "#e2e1e1",
         borderRadius: 8,
@@ -93,3 +81,5 @@ const styles = StyleSheet.create({
         padding: 10,
     }
 });
+
+export default Page
