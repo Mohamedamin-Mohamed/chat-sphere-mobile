@@ -49,12 +49,6 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
     const {navigation} = props
     const router = useRouter()
     const {top, bottom} = useSafeAreaInsets()
-    const [user, setUser] = useState('')
-
-    const getUser = async () => {
-        const user = await AsyncStorage.getItem('user') ?? ''
-        setUser(user)
-    }
 
     const handleSignOut = () => {
         navigation.dispatch(CommonActions.reset({
@@ -72,9 +66,6 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
     }
 
-    useEffect(() => {
-        console.log('user is ', user)
-    }, [user]);
     return (
         <View style={{flex: 1}}>
             <DrawerContentScrollView {...props} scrollEnabled={false}>
