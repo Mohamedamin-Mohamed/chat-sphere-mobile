@@ -10,26 +10,24 @@ const AvatarModal = ({handleModalDisplay, choosePhoto}: AvatarModalProps) => {
         handleModalDisplay()
         choosePhoto()
     }
+
     return (
-        <>
-            <Modal transparent={true} animationType="fade">
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={{textAlign: 'center', fontSize: 18, fontWeight: "500", marginVertical: 10}}>Set
-                            Avatar</Text>
-                        <View style={styles.buttonContainer}>
-                            <Button title="Take photo"/>
-                        </View>
-                        <View style={styles.buttonContainer}>
-                            <Button title="Choose photo" onPress={handlePhotoSelection}/>
-                        </View>
-                        <View style={styles.buttonContainer}>
-                            <Button title="Cancel" onPress={handleModalDisplay}/>
-                        </View>
+        <Modal transparent={true} animationType="fade">
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <Text style={styles.avatarText}>Set Avatar</Text>
+                    <View style={styles.buttonContainer}>
+                        <Button title="Take photo"/>
+                    </View>
+                    <View style={styles.buttonContainer}>
+                        <Button title="Choose photo" onPress={handlePhotoSelection}/>
+                    </View>
+                    <View style={styles.buttonContainer}>
+                        <Button title="Cancel" onPress={handleModalDisplay}/>
                     </View>
                 </View>
-            </Modal>
-        </>
+            </View>
+        </Modal>
     )
 }
 const styles = StyleSheet.create({
@@ -56,5 +54,11 @@ const styles = StyleSheet.create({
         marginTop: 10,
 
     },
+    avatarText: {
+        textAlign: 'center',
+        fontSize: 18,
+        fontWeight: "500",
+        marginVertical: 10
+    }
 })
 export default AvatarModal
