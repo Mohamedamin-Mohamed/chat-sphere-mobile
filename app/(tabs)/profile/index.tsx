@@ -37,6 +37,11 @@ const Page = () => {
             ]
         }))
     }
+
+    const handleProfileView = (el: Buttons) => {
+        setViewProfileModal(false)
+        router.push(el.navigateTo)
+    }
     return (
         <SafeAreaView style={[styles.container, {backgroundColor: viewProfileModal ? '#f5f5f5' : '#fff'}]}>
             <ScrollView>
@@ -53,7 +58,7 @@ const Page = () => {
                 <View style={styles.buttonsView}>
                     {ButtonsList.map((ele, index) => (
                         <TouchableOpacity style={styles.buttonsChildView} key={index} activeOpacity={0.8}
-                                          onPress={() => router.push(ele.navigateTo)}>
+                                          onPress={() => handleProfileView(ele)}>
                             <View style={styles.iconsView}>
                                 <Icon name={ele.icon} size={20} color="black"/>
                             </View>
