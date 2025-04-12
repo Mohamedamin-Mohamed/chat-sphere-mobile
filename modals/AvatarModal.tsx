@@ -5,16 +5,23 @@ interface AvatarModalProps {
     choosePhoto: () => void
 }
 
-const AvatarModal: React.FC<AvatarModalProps> = ({handleModalDisplay, choosePhoto}) => {
+const AvatarModal = ({handleModalDisplay, choosePhoto}: AvatarModalProps) => {
+    const handlePhotoSelection = () => {
+        handleModalDisplay()
+        choosePhoto()
+    }
     return (
         <>
             <Modal transparent={true} animationType="fade">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        <Text style={{textAlign: 'center', fontSize: 18, fontWeight: "500", marginVertical: 10}}>Add
-                            avatar</Text>
+                        <Text style={{textAlign: 'center', fontSize: 18, fontWeight: "500", marginVertical: 10}}>Set
+                            Avatar</Text>
                         <View style={styles.buttonContainer}>
-                            <Button title="Choose photo" onPress={choosePhoto}/>
+                            <Button title="Take photo"/>
+                        </View>
+                        <View style={styles.buttonContainer}>
+                            <Button title="Choose photo" onPress={handlePhotoSelection}/>
                         </View>
                         <View style={styles.buttonContainer}>
                             <Button title="Cancel" onPress={handleModalDisplay}/>

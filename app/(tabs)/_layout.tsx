@@ -17,7 +17,7 @@ const DrawerLayout = () => {
         // </Drawer>
         <Tabs
             screenOptions={({route}) => ({
-                tabBarActiveTintColor: "#085bd8",
+                tabBarActiveTintColor: "black",
                 tabBarLabelStyle: {fontSize: 14},
                 tabBarStyle: {paddingHorizontal: 30},
                 tabBarShowLabel: false,
