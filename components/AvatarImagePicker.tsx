@@ -8,7 +8,7 @@ interface AvatarImagePickerProps {
     oauthProvider: string
 }
 
-const AvatarImagePicker: React.FC<AvatarImagePickerProps> = ({image, setDisplayAvatarModal, oauthProvider}) => {
+const AvatarImagePicker = ({image, setDisplayAvatarModal, oauthProvider}: AvatarImagePickerProps) => {
     return (
         <View style={styles.imageView}>
             {image ? (
