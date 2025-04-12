@@ -1,6 +1,8 @@
 import {Modal, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {Dispatch, SetStateAction} from "react";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import {useRouter} from "expo-router";
+import {useNavigationState} from "@react-navigation/native";
 
 interface ViewProfileModalProps {
     setViewProfileModal: Dispatch<SetStateAction<boolean>>,
@@ -9,6 +11,14 @@ interface ViewProfileModalProps {
 }
 
 const ViewProfileModal = ({setViewProfileModal, fullName, abbrevName}: ViewProfileModalProps) => {
+    const router = useRouter()
+    const currentRoute = useNavigationState(state => state.routes[state.index].name)
+    console.log('Current route is ', currentRoute)
+    const handleProfileEdit = () => {
+        setViewProfileModal(false)
+        if (currentRoute !== 'EditProfile')
+            router.push('editProfile')
+    }
     return (
         <Modal visible={true} transparent={true} animationType="slide">
             <View style={styles.modalOverlay}>
@@ -22,7 +32,7 @@ const ViewProfileModal = ({setViewProfileModal, fullName, abbrevName}: ViewProfi
                         <Icon name="timeline" size={20} color="#898686FF"/>
                         <Text style={styles.joinDateText}>Since Feb 2025</Text>
                     </View>
-                    <TouchableOpacity style={styles.editProfile} activeOpacity={0.6}>
+                    <TouchableOpacity style={styles.editProfile} activeOpacity={0.4} onPress={handleProfileEdit}>
                         <Icon name="edit" size={25} color="black"/>
                         <Text style={styles.editProfileText}>Edit profile</Text>
                     </TouchableOpacity>
@@ -87,7 +97,7 @@ const styles = StyleSheet.create({
     },
     editProfileText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '500',
         paddingVertical: 16
     }
 })
