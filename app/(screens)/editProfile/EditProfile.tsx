@@ -1,16 +1,16 @@
-import {Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
-import {router} from "expo-router";
+import {Alert, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {router, useNavigation} from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {useSelector} from "react-redux";
 import {RootState} from "../../../types/types";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import * as ImagePicker from "expo-image-picker";
 import AvatarModal from "../../../modals/AvatarModal";
 import ViewProfileModal from "../../../modals/ViewProfileModal";
+import {NavigationAction, usePreventRemove} from "@react-navigation/native";
+import DiscardModal from "../../../modals/DiscardModal";
 
 const Page = () => {
-    /* keep editing the TextInput, add save button next to Profile when TextInput changes, add preventRemove to prevent
-    user from leaving screen if TextInput has been changed */
     const userInfo = useSelector((state: RootState) => state.userInfo)
     const fullName = userInfo.name
     const splitFullName = userInfo.name.split(' ')
@@ -19,9 +19,14 @@ const Page = () => {
     const [displayAvatarModal, setDisplayAvatarModal] = useState(false)
     const [image, setImage] = useState('')
     const [viewProfileModal, setViewProfileModal] = useState(false)
+    const [del, setDel] = useState(false)
+    const [nameInput, setNameInput] = useState<string>(fullName)
+    const [showSaveButton, setShowSaveButton] = useState(false)
+    const navigation = useNavigation()
+    const [showDiscardModal, setShowDiscardModal] = useState(false);
+    const [pendingAction, setPendingAction] = useState<NavigationAction | null>(null);
 
     const imagePicker = async () => {
-
         Alert.alert(
             "Grant Chat Sphere photo access?",
             "Chat Sphere would like to access your photo library to help you share pictures in your chats.",
@@ -44,48 +49,98 @@ const Page = () => {
                     },
                 },
             ]
-        );
-    };
+        )
+    }
 
     const handleDisplayAvatarModal = () => {
         setDisplayAvatarModal((prev) => !prev);
+    }
+
+    const saveEdits = () => {
+
+    }
+
+    const handleChange = (text: string) => {
+        setNameInput(text);
+    }
+
+    useEffect(() => {
+        setShowSaveButton(fullName !== nameInput || image !== '');
+    }, [nameInput, image])
+
+    const preventScreenRemoval = image !== '' || fullName !== nameInput
+
+    usePreventRemove(preventScreenRemoval, ({data}) => {
+        setPendingAction(data.action)
+        setShowDiscardModal(true)
+    })
+
+    const confirmDiscard = () => {
+        if (pendingAction) {
+            navigation.dispatch(pendingAction);
+            setPendingAction(null);
+        }
+        setShowDiscardModal(false);
     };
+
+    const cancelDiscard = () => {
+        setPendingAction(null);
+        setShowDiscardModal(false);
+    };
+
 
     return (
         <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
-            <View style={styles.buttonView}>
-                <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} style={styles.backButton}>
-                    <Icon name="arrow-back" size={30} color="white"/>
-                </TouchableOpacity>
-                <Text style={styles.backButtonText}>Profile</Text>
+            <View style={styles.headerContainer}>
+                <View style={styles.buttonView}>
+                    <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} style={styles.backButton}>
+                        <Icon name="arrow-back" size={30} color="white"/>
+                    </TouchableOpacity>
+                    <Text style={styles.backButtonText}>Profile</Text>
+                </View>
+                {showSaveButton &&
+                    <TouchableOpacity style={styles.saveButton} onPress={saveEdits} activeOpacity={0.9}>
+                        <Text style={styles.saveButtonText}>Save</Text>
+                    </TouchableOpacity>
+                }
             </View>
             <View style={styles.container}>
                 <View style={styles.childContainer}>
                     <View style={styles.nameAbbrevView}>
-                        <Text style={styles.abbrevText}>{abbrevName}</Text>
-                        <TouchableOpacity
-                            onPress={() => setDisplayAvatarModal(true)}
-                            style={{
-                                position: 'absolute',
-                                left: '84%',
-                                top: '90%',
-                                backgroundColor: '#085bd8',
-                                borderRadius: 20,
-                                padding: 6,
-                            }}>
+                        {image ? <Image source={{uri: image}} style={styles.avatarImage}/> :
+                            <Text style={styles.abbrevText}>{abbrevName}</Text>
+                        }
+                        <TouchableOpacity onPress={() => setDisplayAvatarModal(true)} style={styles.iconView}>
                             <Icon name="edit" size={16} color="white"/>
                         </TouchableOpacity>
                     </View>
+
                     <TouchableOpacity style={styles.viewProfile} activeOpacity={1}
                                       onPress={() => setViewProfileModal(prevState => !prevState)}>
                         <Text style={styles.viewProfileText}>Preview profile</Text>
                     </TouchableOpacity>
+
                     <View style={styles.nameView}>
-                        <View>
+                        <View style={styles.nameLabel}>
                             <Text>Name</Text>
                         </View>
-                        <View>
-                            <TextInput value={fullName}/>
+
+                        <View style={{flexDirection: 'row', alignItems: 'center', width: '80%'}}>
+                            <TextInput
+                                value={nameInput}
+                                onChangeText={text => handleChange(text)}
+                                onPressIn={() => setDel(true)}
+                                multiline={false}
+                                scrollEnabled={true}
+                                numberOfLines={1}
+                                style={styles.textInput}
+                                autoCorrect={false}
+                            />
+                            {del && (
+                                <TouchableOpacity onPress={() => setNameInput('')} style={styles.cancelIconView}>
+                                    <Icon name='cancel' size={14} color='white'/>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
                 </View>
@@ -94,18 +149,25 @@ const Page = () => {
                 {viewProfileModal && <ViewProfileModal setViewProfileModal={setViewProfileModal} fullName={fullName}
                                                        abbrevName={abbrevName}/>}
             </View>
+            {showDiscardModal && <DiscardModal showDiscardModal={showDiscardModal} cancelDiscard={cancelDiscard}
+                                               confirmDiscard={confirmDiscard}/>}
         </SafeAreaView>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        marginBottom: 16,
+        marginTop: 4,
+    },
     buttonView: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginLeft: 20,
-        marginBottom: 16,
         gap: 10,
-        marginTop: 20
     },
     backButton: {
         backgroundColor: "black",
@@ -119,14 +181,26 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "600"
     },
+    saveButton: {
+        backgroundColor: "#085bd8",
+        justifyContent: 'center',
+        alignItems: "center",
+        borderRadius: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        marginHorizontal: 10,
+    },
+    saveButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
     container: {
         flex: 1,
-        marginTop: 20,
         backgroundColor: '#f5f5f5',
     },
     childContainer: {
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     nameAbbrevView: {
         marginVertical: 24,
@@ -136,7 +210,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 96,
-        padding: 10
+        padding: 10,
+    },
+    avatarImage: {
+        ...StyleSheet.absoluteFillObject,
+        resizeMode: 'cover',
+        borderRadius: 96
     },
     abbrevText: {
         fontSize: 56,
@@ -145,7 +224,8 @@ const styles = StyleSheet.create({
     viewProfile: {
         backgroundColor: 'black',
         padding: 10,
-        borderRadius: 48
+        borderRadius: 48,
+        marginVertical: 10,
     },
     viewProfileText: {
         color: 'white',
@@ -160,6 +240,34 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 8,
         marginVertical: 20,
+    },
+    nameLabel: {
+        width: '20%',
+        justifyContent: 'center'
+    },
+    iconView: {
+        position: 'absolute',
+        left: '84%',
+        top: '90%',
+        backgroundColor: '#085bd8',
+        borderRadius: 20,
+        padding: 6,
+    },
+    textInput: {
+        flex: 1,
+        paddingVertical: 0,
+        paddingHorizontal: 6,
+        textAlign: 'right',
+    },
+    cancelIconView: {
+        width: 22,
+        height: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 16,
+        backgroundColor: '#a9a6a6',
+        marginLeft: 6,
     }
-})
-export default Page
+});
+
+export default Page;
