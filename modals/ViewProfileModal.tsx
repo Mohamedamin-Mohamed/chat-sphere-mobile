@@ -1,8 +1,7 @@
 import {Modal, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {Dispatch, SetStateAction} from "react";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import {useRouter} from "expo-router";
-import {useNavigationState} from "@react-navigation/native";
+import {usePathname, useRouter} from "expo-router";
 
 interface ViewProfileModalProps {
     setViewProfileModal: Dispatch<SetStateAction<boolean>>,
@@ -12,12 +11,13 @@ interface ViewProfileModalProps {
 
 const ViewProfileModal = ({setViewProfileModal, fullName, abbrevName}: ViewProfileModalProps) => {
     const router = useRouter()
-    const currentRoute = useNavigationState(state => state.routes[state.index].name)
-    console.log('Current route is ', currentRoute)
+    const pathname = usePathname()
+
     const handleProfileEdit = () => {
         setViewProfileModal(false)
-        if (currentRoute !== 'EditProfile')
+        if (!pathname.includes('/editProfile')) {
             router.push('editProfile')
+        }
     }
     return (
         <Modal visible={true} transparent={true} animationType="slide">
