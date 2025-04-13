@@ -9,15 +9,15 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
-import { router, useNavigation } from "expo-router";
+import {router, useNavigation} from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../types/types";
-import { useEffect, useState } from "react";
+import {useSelector} from "react-redux";
+import {RootState} from "../../../types/types";
+import {useEffect, useState} from "react";
 import * as ImagePicker from "expo-image-picker";
 import AvatarModal from "../../../modals/AvatarModal";
 import ViewProfileModal from "../../../modals/ViewProfileModal";
-import { NavigationAction, usePreventRemove } from "@react-navigation/native";
+import {NavigationAction, usePreventRemove} from "@react-navigation/native";
 import DiscardModal from "../../../modals/DiscardModal";
 import CampusConnect from "./CampusConnect";
 import AccountInfo from "./AccountInfo";
@@ -42,7 +42,7 @@ const Page = () => {
             "Grant Chat Sphere photo access?",
             "Chat Sphere would like to access your photo library to help you share pictures in your chats.",
             [
-                { text: "Cancel", style: "cancel" },
+                {text: "Cancel", style: "cancel"},
                 {
                     text: "Ok",
                     style: "default",
@@ -81,7 +81,7 @@ const Page = () => {
 
     const preventScreenRemoval = image !== '' || fullName !== nameInput;
 
-    usePreventRemove(preventScreenRemoval, ({ data }) => {
+    usePreventRemove(preventScreenRemoval, ({data}) => {
         setPendingAction(data.action);
         setShowDiscardModal(true);
     });
@@ -100,44 +100,45 @@ const Page = () => {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+        <SafeAreaView style={{flex: 1}}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <View style={styles.headerContainer}>
                     <View style={styles.buttonView}>
-                        <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} style={styles.backButton}>
-                            <Icon name="arrow-back" size={30} color="white" />
+                        <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()}
+                                          style={styles.backButton}>
+                            <Icon name="arrow-back" size={30} color="white"/>
                         </TouchableOpacity>
                         <Text style={styles.backButtonText}>Profile</Text>
                     </View>
                     {showSaveButton && (
-                        <TouchableOpacity style={styles.saveButton} onPress={saveEdits} activeOpacity={0.9}>
+                        <TouchableOpacity style={styles.saveButton}
+                                          onPress={saveEdits} activeOpacity={0.9}>
                             <Text style={styles.saveButtonText}>Save</Text>
                         </TouchableOpacity>
                     )}
                 </View>
-
                 <View style={styles.childContainer}>
                     <View style={styles.nameAbbrevView}>
                         {image ? (
-                            <Image source={{ uri: image }} style={styles.avatarImage} />
+                            <Image source={{uri: image}} style={styles.avatarImage}/>
                         ) : (
                             <Text style={styles.abbrevText}>{abbrevName}</Text>
                         )}
                         <TouchableOpacity onPress={handleDisplayAvatarModal} style={styles.iconView}>
-                            <Icon name="edit" size={16} color="white" />
+                            <Icon name="edit" size={16} color="white"/>
                         </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity style={styles.viewProfile} activeOpacity={1} onPress={() => setViewProfileModal(prev => !prev)}>
+                    <TouchableOpacity style={styles.viewProfile} activeOpacity={1}
+                                      onPress={() => setViewProfileModal(prev => !prev)}>
                         <Text style={styles.viewProfileText}>Preview profile</Text>
                     </TouchableOpacity>
-
                     <View style={styles.nameView}>
                         <View style={styles.nameLabel}>
                             <Text>Name</Text>
                         </View>
 
-                        <View style={{ flexDirection: 'row', alignItems: 'center', width: '80%' }}>
+                        <View style={styles.textInputView}>
                             <TextInput
                                 value={nameInput}
                                 onChangeText={handleChange}
@@ -148,8 +149,8 @@ const Page = () => {
                                 autoCorrect={false}
                             />
                             {del && (
-                                <TouchableOpacity onPress={() => setNameInput('')} style={styles.cancelIconView}>
-                                    <Icon name="cancel" size={14} color="white" />
+                                <TouchableOpacity onPress={() => setNameInput('')}>
+                                    <Icon name="cancel" size={20} color="gray"/>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -164,12 +165,12 @@ const Page = () => {
                             selectionColor="#2c2c2c"
                         />
                     </View>
-                    <CampusConnect />
-                    <AccountInfo />
+                    <CampusConnect/>
+                    <AccountInfo/>
                 </View>
 
                 {displayAvatarModal && (
-                    <AvatarModal handleModalDisplay={handleDisplayAvatarModal} choosePhoto={imagePicker} />
+                    <AvatarModal handleModalDisplay={handleDisplayAvatarModal} choosePhoto={imagePicker}/>
                 )}
                 {viewProfileModal && (
                     <ViewProfileModal
@@ -194,14 +195,15 @@ const styles = StyleSheet.create({
     scrollContainer: {
         paddingBottom: 40,
         alignItems: 'center',
-        backgroundColor: '#f5f5f5'
     },
     headerContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        width: '90%',
+        width: '100%',
         paddingVertical: 16,
+        backgroundColor: 'white',
+        paddingHorizontal: 16,
     },
     buttonView: {
         flexDirection: 'row',
@@ -279,6 +281,11 @@ const styles = StyleSheet.create({
         width: '20%',
         justifyContent: 'center',
     },
+    textInputView: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '80%'
+    },
     textInput: {
         flex: 1,
         paddingVertical: 0,
@@ -298,6 +305,7 @@ const styles = StyleSheet.create({
         gap: 10,
         width: '90%',
         borderRadius: 8,
+        marginLeft: 10,
         marginBottom: 20,
     },
     bioText: {
