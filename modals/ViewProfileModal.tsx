@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
         justifyContent: 'flex-end',
-        marginVertical: 40,
+        marginVertical: 36,
         marginHorizontal: 4,
     },
     modalContent: {
@@ -60,21 +60,21 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -18,
         backgroundColor: '#ebeaea',
-        height: 100,
-        width: 100,
+        height: 110,
+        width: 110,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 48,
+        borderRadius: 56,
         padding: 10,
 
     },
     abbrevText: {
-        fontSize: 30,
+        fontSize: 40,
         fontWeight: '800'
     },
     fullNameText: {
-        fontWeight: '700',
-        fontSize: 24
+        fontWeight: '600',
+        fontSize: 28
     },
     joinDate: {
         flexDirection: 'row',
