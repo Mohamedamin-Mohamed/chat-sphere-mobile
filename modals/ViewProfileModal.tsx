@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
         justifyContent: 'flex-end',
-        marginVertical: 36,
+        marginVertical: 20,
         marginHorizontal: 4,
     },
     modalContent: {
@@ -60,11 +60,11 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -18,
         backgroundColor: '#ebeaea',
-        height: 110,
-        width: 110,
+        height: 120,
+        width: 120,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 56,
+        borderRadius: 64,
         padding: 10,
 
     },
@@ -73,8 +73,9 @@ const styles = StyleSheet.create({
         fontWeight: '800'
     },
     fullNameText: {
-        fontWeight: '600',
-        fontSize: 28
+        fontWeight: '700',
+        fontSize: 24,
+        marginTop: 20
     },
     joinDate: {
         flexDirection: 'row',
@@ -93,7 +94,8 @@ const styles = StyleSheet.create({
         width: '94%',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 10
+        gap: 10,
+        marginBottom: 20
     },
     editProfileText: {
         fontSize: 16,
