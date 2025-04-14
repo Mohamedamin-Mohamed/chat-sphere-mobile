@@ -135,7 +135,7 @@ const Page = () => {
                     </TouchableOpacity>
                     <View style={styles.nameView}>
                         <View style={styles.nameLabel}>
-                            <Text>Name</Text>
+                            <Text style={styles.nameText}>Name</Text>
                         </View>
 
                         <View style={styles.textInputView}>
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     },
     abbrevText: {
         fontSize: 56,
-        fontWeight: '800',
+        fontWeight: '700',
     },
     viewProfile: {
         backgroundColor: 'black',
@@ -265,8 +265,10 @@ const styles = StyleSheet.create({
     },
     viewProfileText: {
         color: 'white',
-        fontSize: 16,
+        fontSize: 15,
+        paddingVertical: 2,
         marginHorizontal: 10,
+        fontWeight: '700'
     },
     nameView: {
         flexDirection: 'row',
@@ -281,6 +283,9 @@ const styles = StyleSheet.create({
         width: '20%',
         justifyContent: 'center',
     },
+    nameText: {
+        fontSize: 16
+    },
     textInputView: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -291,6 +296,8 @@ const styles = StyleSheet.create({
         paddingVertical: 0,
         paddingHorizontal: 6,
         textAlign: 'right',
+        fontSize: 16,
+        fontWeight: '400'
     },
     cancelIconView: {
         width: 22,
