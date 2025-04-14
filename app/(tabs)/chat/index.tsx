@@ -2,9 +2,14 @@ import {RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpa
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {useState} from "react";
+import CampusConnectModal from "../../../modals/CampusConnectModal";
 
 const Page = () => {
     const [refreshing, setRefreshing] = useState(false)
+    const [campusConnectModal, setCampusConnectModal] = useState(false)
+    const handleCampusConnectModal = () => {
+        setCampusConnectModal(prevState => !prevState)
+    }
 
     const onRefresh = () => {
         setRefreshing(true)
@@ -14,10 +19,11 @@ const Page = () => {
     }
     return (
         <SafeAreaView style={{flex: 1}}>
-            <ScrollView contentContainerStyle={{flexGrow: 1}} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>}>
+            <ScrollView contentContainerStyle={{flexGrow: 1}}
+                        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>}>
                 <View style={styles.buttonsView}>
                     <Text style={styles.chatText}>Chat</Text>
-                    <View style={{flexDirection: 'row', gap: 10}}>
+                    <View style={styles.sideView}>
                         <TouchableOpacity style={styles.buttons} activeOpacity={0.8}>
                             <MaterialCommunityIcons name="qrcode" size={30}/>
 
@@ -35,27 +41,24 @@ const Page = () => {
                     </Text>
 
                     <Text style={styles.exploreHeader}>More to explore </Text>
-                    <View style={{gap: 10, alignSelf: 'center'}}>
-                        <TouchableOpacity activeOpacity={0.8}>
-                            <View style={styles.viewLikes}>
-                                <Text style={styles.exploreSubHeader}>Create a group</Text>
-                                <Text style={styles.exploreText}>Start your own chat and invite members</Text>
-                            </View>
+                    <View style={styles.parentView}>
+                        <TouchableOpacity activeOpacity={0.8} style={styles.viewLikes}>
+                            <Text style={styles.exploreSubHeader}>Create a group</Text>
+                            <Text style={styles.exploreText}>Start your own chat and invite members</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={0.8}>
-                            <View style={styles.viewLikes}>
-                                <Text style={styles.exploreSubHeader}>Join groups</Text>
-                                <Text style={styles.exploreText}>Discover trending and nearby groups</Text>
-                            </View>
+                        <TouchableOpacity style={styles.viewLikes} activeOpacity={0.8}>
+                            <Text style={styles.exploreSubHeader}>Join groups</Text>
+                            <Text style={styles.exploreText}>Discover trending and nearby groups</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={0.8}>
-                            <View style={styles.viewLikes}>
-                                <Text style={styles.exploreSubHeader}>Join your campus</Text>
-                                <Text style={styles.exploreText}>Find groups, classmates, etc at your school</Text>
-                            </View>
+                        <TouchableOpacity style={styles.viewLikes} activeOpacity={0.8}
+                                          onPress={handleCampusConnectModal}>
+                            <Text style={styles.exploreSubHeader}>Join your campus</Text>
+                            <Text style={styles.exploreText}>Find groups, classmates, etc at your school</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
+                {campusConnectModal && <CampusConnectModal campusConnectModal={campusConnectModal}
+                                                           handleCampusConnectModal={handleCampusConnectModal}/>}
             </ScrollView>
         </SafeAreaView>
     );
@@ -78,6 +81,10 @@ const styles = StyleSheet.create({
     chatText: {
         fontSize: 30,
         fontWeight: "600"
+    },
+    sideView: {
+        flexDirection: 'row',
+        gap: 10
     },
     buttons: {
         backgroundColor: '#e8e6e6',
@@ -119,12 +126,20 @@ const styles = StyleSheet.create({
         fontWeight: "500",
         fontSize: 16,
     },
-    exploreText: {},
+    exploreText: {
+        paddingTop: 6,
+        fontWeight: '300'
+    },
+    parentView: {
+        gap: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%'
+    },
     viewLikes: {
         backgroundColor: "#e8e6e6",
         borderRadius: 8,
-        justifyContent: 'center',
-        width: "100%",
+        width: "90%",
         padding: 10,
     }
 });
