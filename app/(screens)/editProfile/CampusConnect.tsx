@@ -4,27 +4,49 @@ import {useState} from "react";
 import CampusConnectModal from "../../../modals/CampusConnectModal";
 
 const CampusConnect = () => {
-    const [campusConnectModal, setCampusConnectModal] = useState(false)
+    const [campusConnectModal, setCampusConnectModal] = useState(false);
+    const [isPressed, setIsPressed] = useState(false);
+
     const handleCampusConnectModal = () => {
-        setCampusConnectModal(prevState => !prevState)
-    }
+        setCampusConnectModal(prev => !prev);
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.childContainer}>
                 <View style={styles.campusConnectView}>
-                    <Icon name='school' size={20}/>
+                    <Icon name="school" size={20}/>
                     <Text style={styles.campusText}>Campus connect</Text>
                 </View>
-                <TouchableOpacity style={styles.connectButton} activeOpacity={0.9}
-                                  onPress={handleCampusConnectModal}>
-                    <Text style={styles.connectText}>Connect</Text>
+                <TouchableOpacity
+                    style={[
+                        campusConnectModal || isPressed ? styles.connectButtonPressed : styles.connectButton,
+                    ]}
+                    activeOpacity={0.9}
+                    onPress={handleCampusConnectModal}
+                    onPressIn={() => setIsPressed(true)}
+                    onPressOut={() => setIsPressed(false)}
+                >
+                    <Text
+                        style={[
+                            styles.connectText,
+                            (campusConnectModal || isPressed) && {color: 'white'},
+                        ]}
+                    >
+                        Connect
+                    </Text>
                 </TouchableOpacity>
             </View>
-            {campusConnectModal && <CampusConnectModal campusConnectModal={campusConnectModal}
-                                                       handleCampusConnectModal={handleCampusConnectModal}/>}
+            {campusConnectModal && (
+                <CampusConnectModal
+                    campusConnectModal={campusConnectModal}
+                    handleCampusConnectModal={handleCampusConnectModal}
+                />
+            )}
         </View>
-    )
-}
+    );
+};
+
 const styles = StyleSheet.create({
     container: {
         backgroundColor: 'white',
@@ -42,6 +64,15 @@ const styles = StyleSheet.create({
     },
     campusText: {
         fontSize: 16
+    },
+    connectButtonPressed: {
+        marginRight: 10,
+        borderWidth: 1,
+        borderColor: 'white',
+        borderRadius: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        backgroundColor: '#085bd8',
     },
     connectButton: {
         marginRight: 10,
