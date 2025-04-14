@@ -19,7 +19,6 @@ interface CampusConnectModalProps {
     handleCampusConnectModal: () => void;
 }
 
-//add regex checker for email
 const CampusConnectModal = ({campusConnectModal, handleCampusConnectModal}: CampusConnectModalProps) => {
     const campusDirectory = require("../assets/images/campus-directory.png");
 
@@ -34,16 +33,17 @@ const CampusConnectModal = ({campusConnectModal, handleCampusConnectModal}: Camp
 
     const handleBlur = () => {
         setIsFocused(false);
+        setHasBeenFocused(true)
     };
 
     const getBorderColor = () => {
+        if (!emailValid && hasBeenFocused && !isFocused) return "red"
         if (isFocused) return "#085bd8";
-        if (!isFocused && hasBeenFocused && !emailValid) return "red";
-        return "#f0f0f0";
+        return "#f0f0f0"
     };
 
     const getBackgroundColor = () => {
-        return isFocused ? "white" : "#f0f0f0";
+        return isFocused ? "white" : "#f0f0f0"
     }
 
     const handleChange = (text: string) => {
@@ -68,7 +68,7 @@ const CampusConnectModal = ({campusConnectModal, handleCampusConnectModal}: Camp
                 <SafeAreaView style={styles.modalContent}>
                     <View style={styles.header}>
                         <TouchableOpacity onPress={handleCampusConnectModal} style={styles.iconWrapper}>
-                            <Icon name="close" size={24} color="black"/>
+                            <Icon name="close" size={28} color="black"/>
                         </TouchableOpacity>
                         <Text style={styles.title}>Join your campus</Text>
                     </View>
@@ -87,7 +87,6 @@ const CampusConnectModal = ({campusConnectModal, handleCampusConnectModal}: Camp
                             }]}>
                             <TextInput
                                 value={emailInput} autoCapitalize='none'
-                                // onChangeText={text => setEmailInput(text)}
                                 onChangeText={text => handleChange(text)}
                                 placeholder='Enter school email (.edu)'
                                 style={styles.textInput}
@@ -137,7 +136,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
-        marginVertical: 10,
+        marginTop: 10,
         marginLeft: 10,
     },
     iconWrapper: {
@@ -145,7 +144,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 22,
-        fontWeight: "700",
+        fontWeight: "600",
         color: "#333",
     },
     image: {
@@ -160,13 +159,13 @@ const styles = StyleSheet.create({
         marginVertical: 20
     },
     campusViewHeader: {
-        fontSize: 20,
-        fontWeight: '800'
+        fontSize: 22,
+        fontWeight: '700'
     },
     campusViewSubHeader: {
         textAlign: 'center',
         fontSize: 14,
-        fontWeight: '300',
+        fontWeight: '400',
         width: '76%'
     },
     lastView: {
@@ -186,9 +185,9 @@ const styles = StyleSheet.create({
     },
     textInput: {
         flex: 1,
-        paddingVertical: 10,
+        paddingVertical: 14,
         paddingRight: 30,
-        fontSize: 14,
+        fontSize: 16,
     },
     cancelIconView: {
         position: 'absolute',
