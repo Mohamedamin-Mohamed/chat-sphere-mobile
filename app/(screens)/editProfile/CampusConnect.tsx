@@ -84,7 +84,6 @@ const styles = StyleSheet.create({
     },
     connectText: {
         fontSize: 15,
-
         color: '#085bd8',
     }
 })
