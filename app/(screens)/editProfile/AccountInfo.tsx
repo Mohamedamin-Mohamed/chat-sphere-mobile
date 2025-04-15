@@ -1,12 +1,22 @@
-import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import {useSelector} from "react-redux";
-import {RootState} from "../../../types/types";
 import {router} from "expo-router";
+import {Dispatch, SetStateAction, useState} from "react";
 
-const AccountInfo = () => {
-    const userInfo = useSelector((state: RootState) => state.userInfo)
-    const email = userInfo.email
+interface AccountInfoProps {
+    emailInput: string,
+    setEmailInput: Dispatch<SetStateAction<string>>,
+    reInitializeNameInput: () => void
+    handleEmailChange: (text: string) => void
+}
+
+const AccountInfo = ({emailInput, setEmailInput, reInitializeNameInput, handleEmailChange}: AccountInfoProps) => {
+    const [del, setDel] = useState(false);
+
+    const handlePressing = () => {
+        setEmailInput('')
+        reInitializeNameInput()
+    }
     return (
         <View style={styles.container}>
             <Text style={styles.accountInfoText}>Account info</Text>
@@ -16,16 +26,33 @@ const AccountInfo = () => {
             </View>
             <View style={styles.childContainer}>
                 <View style={styles.sameView}>
-                    <Text>Email</Text>
-                    <Text>{email}</Text>
+                    <Text style={styles.subHeader}>Email</Text>
+                    <View style={styles.textInputView}>
+                        <TextInput
+                            value={emailInput}
+                            onChangeText={handleEmailChange}
+                            onPressIn={() => setDel(true)}
+                            multiline={false}
+                            numberOfLines={1}
+                            style={styles.textInput}
+                            autoCorrect={false}
+                            autoCapitalize='none'
+                        />
+                        {del && emailInput !== '' && (
+                            <TouchableOpacity onPress={handlePressing}>
+                                <Icon name="cancel" size={20} color="gray"/>
+                            </TouchableOpacity>
+                        )}
+
+                    </View>
                 </View>
                 <View style={styles.sameView}>
-                    <Text>Phone Number</Text>
+                    <Text style={styles.subHeader}>Phone Number</Text>
                     {/*{//this is just a place-holder}*/}
                     <Text>+1 612-261-7712</Text>
                 </View>
                 <View style={styles.sameView}>
-                    <Text>Password</Text>
+                    <Text style={styles.subHeader}>Password</Text>
                     <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('passwordChange')}>
                         <Icon name='chevron-right' size={30} color='#a9a6a6'/>
                     </TouchableOpacity>
@@ -63,11 +90,28 @@ const styles = StyleSheet.create({
         marginTop: 10,
         backgroundColor: 'white',
         padding: 16,
-        gap: 20
+        gap: 20,
+        borderRadius: 8,
     },
     sameView: {
         flexDirection: 'row',
-        justifyContent: 'space-between'
-    }
+        justifyContent: 'space-between',
+    },
+    subHeader: {
+        fontSize: 16,
+    },
+    textInputView: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '80%'
+    },
+    textInput: {
+        flex: 1,
+        paddingVertical: 0,
+        paddingHorizontal: 6,
+        textAlign: 'right',
+        fontSize: 16,
+        fontWeight: '400'
+    },
 })
 export default AccountInfo
