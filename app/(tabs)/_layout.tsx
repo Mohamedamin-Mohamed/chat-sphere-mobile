@@ -28,7 +28,7 @@ const DrawerLayout = () => {
                     if (route.name === 'profile') {
                         iconName = 'person';
                     } else if (route.name === 'chat') {
-                        iconName = 'chat-bubble';
+                        iconName = 'forum';
                     } else {
                         iconName = 'explore';
                     }
