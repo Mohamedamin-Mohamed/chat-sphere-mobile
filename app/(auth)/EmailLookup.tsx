@@ -17,7 +17,6 @@ import emailLookup from "../../api/emailLookup";
 import Toast from "react-native-toast-message";
 import VerificationCodeModal from "../../modals/VerificationCodeModal";
 
-// Define flow steps
 enum ResetFlow {
     EmailLookup,
     Verification,
@@ -77,9 +76,7 @@ const EmailLookup = () => {
         }
     }
 
-    // Handle cancel/close for any modal
     const handleModalCancel = () => {
-        console.log('Modal closed, resetting flow')
         setCurrentFlowStep(ResetFlow.EmailLookup)
     }
 

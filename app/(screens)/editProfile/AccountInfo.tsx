@@ -6,17 +6,36 @@ import {Dispatch, SetStateAction, useState} from "react";
 interface AccountInfoProps {
     emailInput: string,
     setEmailInput: Dispatch<SetStateAction<string>>,
-    reInitializeNameInput: () => void
+    setEmailInputActive: Dispatch<SetStateAction<boolean>>,
+    setNameInputActive: Dispatch<SetStateAction<boolean>>,
+    reInitializeNameInput: () => void,
+    handlePasswordChange: (route: string)=> void,
+    emailInputActive: boolean
     handleEmailChange: (text: string) => void
 }
 
-const AccountInfo = ({emailInput, setEmailInput, reInitializeNameInput, handleEmailChange}: AccountInfoProps) => {
+const AccountInfo = ({
+                         emailInput,
+                         setEmailInput,
+                         setEmailInputActive,
+                         setNameInputActive,
+                         reInitializeNameInput,
+                         handlePasswordChange,
+                         handleEmailChange,
+                         emailInputActive
+                     }: AccountInfoProps) => {
     const [del, setDel] = useState(false);
 
     const handlePressing = () => {
         setEmailInput('')
         reInitializeNameInput()
     }
+
+    const handlePressIn = () => {
+        setDel(true)
+        setEmailInputActive(true)
+    }
+
     return (
         <View style={styles.container}>
             <Text style={styles.accountInfoText}>Account info</Text>
@@ -27,24 +46,29 @@ const AccountInfo = ({emailInput, setEmailInput, reInitializeNameInput, handleEm
             <View style={styles.childContainer}>
                 <View style={styles.sameView}>
                     <Text style={styles.subHeader}>Email</Text>
-                    <View style={styles.textInputView}>
+                    <TouchableOpacity style={styles.textInputView}>
                         <TextInput
                             value={emailInput}
                             onChangeText={handleEmailChange}
-                            onPressIn={() => setDel(true)}
+                            onPressIn={handlePressIn}
                             multiline={false}
                             numberOfLines={1}
                             style={styles.textInput}
                             autoCorrect={false}
                             autoCapitalize='none'
+                            onFocus={() => {
+                                setEmailInputActive(true);
+                                setNameInputActive(false);
+                                reInitializeNameInput();
+                            }}
                         />
-                        {del && emailInput !== '' && (
+                        {emailInputActive && emailInput !== '' && (
                             <TouchableOpacity onPress={handlePressing}>
                                 <Icon name="cancel" size={20} color="gray"/>
                             </TouchableOpacity>
                         )}
 
-                    </View>
+                    </TouchableOpacity>
                 </View>
                 <View style={styles.sameView}>
                     <Text style={styles.subHeader}>Phone Number</Text>
@@ -53,7 +77,7 @@ const AccountInfo = ({emailInput, setEmailInput, reInitializeNameInput, handleEm
                 </View>
                 <View style={styles.sameView}>
                     <Text style={styles.subHeader}>Password</Text>
-                    <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('passwordChange')}>
+                    <TouchableOpacity activeOpacity={0.9} onPress={() => handlePasswordChange('passwordChange')}>
                         <Icon name='chevron-right' size={30} color='#a9a6a6'/>
                     </TouchableOpacity>
                 </View>

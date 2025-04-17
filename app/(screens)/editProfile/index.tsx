@@ -39,6 +39,8 @@ const Page = () => {
     const [del, setDel] = useState(false);
     const [nameInput, setNameInput] = useState<string>(fullName);
     const [emailInput, setEmailInput] = useState<string>(email)
+    const [nameInputActive, setNameInputActive] = useState(false);
+    const [emailInputActive, setEmailInputActive] = useState(false)
     const [bio, setBio] = useState('')
 
     const [showSaveButton, setShowSaveButton] = useState(false);
@@ -114,6 +116,14 @@ const Page = () => {
 
 
     usePreventRemove(preventScreenRemoval, ({data}) => {
+        if (nameInput.trim() === '') {
+            setShowEmptyNameModal(true);
+            return;
+        } else if (emailInputActive && !isEmailValid()) {
+            setShowEmailNotFoundModal(true);
+            return;
+        }
+
         setPendingAction(data.action);
         setShowDiscardModal(true);
     });
@@ -129,33 +139,72 @@ const Page = () => {
     const cancelDiscard = () => {
         setPendingAction(null);
         setShowDiscardModal(false);
+    }
+
+    const handleNameModalClose = () => {
+        setShowEmptyNameModal(false);
+        setNameInputActive(true);
+        setEmailInputActive(false);
     };
 
-    const discardModal = () => {
-        setShowEmailNotFoundModal(false)
-        setShowEmptyNameModal(false
-        )
-    }
+    const handleEmailModalClose = () => {
+        setShowEmailNotFoundModal(false);
+        setEmailInputActive(true);
+        setNameInputActive(false);
+    };
 
     const reInitializeNameInput = () => {
         setNameInput(fullName)
     }
 
-    const handleNameInputPress = () => {
-        if (!isEmailValid) {
-            setShowEmailNotFoundModal(true)
-        }
+    const reInitializeEmailInput = () => {
+        setEmailInput(email);
     }
 
+    const handleNameInputPress = () => {
+        if (emailInputActive && !isEmailValid()) {
+            setShowEmailNotFoundModal(true);
+            return;
+        }
+        setNameInputActive(true);
+        setEmailInputActive(false);
+        reInitializeEmailInput();
+    };
+
     const isEmailValid = () => {
-        return emailValidation(emailInput)
+        if (emailInputActive) {
+            return emailValidation(emailInput);
+        }
+        return true;
     }
+
+    useEffect(() => {
+        setNameInput(fullName)
+    }, [emailInputActive])
+
+    const handleBackPress = () => {
+        if (preventScreenRemoval) {
+            setShowDiscardModal(true);
+            return;
+        }
+
+        router.back();
+    }
+
+    const handlePasswordChange = (route: string) => {
+        setNameInput(fullName)
+        setEmailInput(email)
+        router.push(route)
+    }
+
     return (
         <SafeAreaView style={{flex: 1, backgroundColor: 'white'}}>
             <View style={styles.headerContainer}>
                 <View style={styles.buttonView}>
-                    <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()}
-                                      style={styles.backButton}>
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={handleBackPress}
+                        style={styles.backButton}>
                         <Icon name="arrow-back" size={28} color="white"/>
                     </TouchableOpacity>
                     <Text style={styles.backButtonText}>Profile</Text>
@@ -191,34 +240,37 @@ const Page = () => {
                         </View>
 
                         <TouchableOpacity
-                            style={styles.textInputView}
+                            style={[
+                                styles.textInputView, emailInputActive && !isEmailValid() && {opacity: 0.5}
+                            ]}
                             onPress={handleNameInputPress}
                             activeOpacity={1}
                         >
                             <TextInput
                                 value={nameInput}
-                                onChangeText={(text) => {
-                                    if (!isEmailValid()) {
+                                onChangeText={(text) => setNameInput(text.trim())}
+                                onFocus={() => {
+                                    if (emailInputActive && !isEmailValid()) {
                                         setShowEmailNotFoundModal(true);
                                         return;
                                     }
-                                    handleNameChange(text);
+                                    setNameInputActive(true);
+                                    setEmailInputActive(false);
+                                    reInitializeEmailInput();
+                                    setDel(true);
                                 }}
-                                onPressIn={() => {
-                                    if (!isEmailValid()) {
-                                        setShowEmailNotFoundModal(true);
-                                    } else {
-                                        setDel(true);
-                                    }
-                                }}
-                                editable={isEmailValid()}
+                                editable={!(emailInputActive && !isEmailValid())}
                                 multiline={false}
                                 numberOfLines={1}
-                                style={styles.textInput}
+                                style={[
+                                    styles.textInput,
+                                    (emailInputActive && !isEmailValid()) && {color: '#999'}
+                                ]}
                                 autoCorrect={false}
-                                autoCapitalize='none'
+                                autoCapitalize="none"
                             />
-                            {del && isEmailValid() && nameInput !== '' && (
+
+                            {nameInputActive && nameInput !== '' && (
                                 <TouchableOpacity onPress={() => setNameInput('')}>
                                     <Icon name="cancel" size={20} color="gray"/>
                                 </TouchableOpacity>
@@ -241,8 +293,13 @@ const Page = () => {
                     <AccountInfo
                         emailInput={emailInput}
                         setEmailInput={setEmailInput}
+                        setEmailInputActive={setEmailInputActive}
+                        setNameInputActive={setNameInputActive}
                         reInitializeNameInput={reInitializeNameInput}
-                        handleEmailChange={handleEmailChange}/>
+                        handlePasswordChange={handlePasswordChange}
+                        emailInputActive={emailInputActive}
+                        handleEmailChange={handleEmailChange}
+                    />
                 </View>
 
                 {displayAvatarModal && (
@@ -263,8 +320,9 @@ const Page = () => {
                     />
                 )}
                 {showEmailNotFoundModal &&
-                    <EmailNotValidModal showModal={showEmailNotFoundModal} discardModal={discardModal}/>}
-                {showEmptyNameModal && <EmptyNameModal showModal={showEmptyNameModal} discardModal={discardModal}/>}
+                    <EmailNotValidModal showModal={showEmailNotFoundModal} discardModal={handleEmailModalClose}/>}
+                {showEmptyNameModal &&
+                    <EmptyNameModal showModal={showEmptyNameModal} discardModal={handleNameModalClose}/>}
             </ScrollView>
         </SafeAreaView>
     );
