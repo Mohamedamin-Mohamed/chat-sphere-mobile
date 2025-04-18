@@ -1,11 +1,12 @@
-import {SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {router, useNavigation} from "expo-router";
 import {useSelector} from "react-redux";
 import {Buttons, RootState} from "../../../types/types";
-import {useState} from "react";
+import React, {useState} from "react";
 import ViewProfileModal from "../../../modals/ViewProfileModal";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {CommonActions} from "@react-navigation/native";
+import ConfirmSignOutModal from "../../../modals/ConfirmSignOutModal";
 
 
 const Page = () => {
@@ -17,13 +18,20 @@ const Page = () => {
     ]
     const navigation = useNavigation()
     const userInfo = useSelector((state: RootState) => state.userInfo)
+    const image = userInfo.picture
     const fullName = userInfo.name
     const splitFullName = userInfo.name.split(' ')
     const firstName = splitFullName[0].charAt(0).toUpperCase(), lastName = splitFullName[1].charAt(0).toUpperCase()
     const abbrevName = firstName + lastName
     const [viewProfileModal, setViewProfileModal] = useState(false)
+    const [showSignOutModal, setShowSignOutModal] = useState(false);
 
     const handleSignOut = () => {
+        setShowSignOutModal(true);
+    }
+
+    const confirmSignOut = () => {
+        setShowSignOutModal(false);
         navigation.dispatch(CommonActions.reset({
             index: 0,
             routes: [
@@ -31,10 +39,10 @@ const Page = () => {
                     name: '(auth)',
                     state: {
                         index: 0,
-                        routes: [{name: ('Welcome')}]
-                    }
+                        routes: [{name: 'Welcome'}],
+                    },
                 },
-            ]
+            ],
         }))
     }
 
@@ -42,13 +50,18 @@ const Page = () => {
         setViewProfileModal(false)
         router.push(el.navigateTo)
     }
+
     return (
         <SafeAreaView style={[styles.container, {backgroundColor: viewProfileModal ? '#f5f5f5' : '#fff'}]}>
             <ScrollView>
                 <View style={styles.childContainer}>
                     <Text style={styles.fullNameText}>{fullName}</Text>
                     <View style={styles.nameAbbrevView}>
-                        <Text style={styles.abbrevText}>{abbrevName}</Text>
+                        {image ? (
+                            <Image source={{uri: image}} style={styles.avatarImage}/>
+                        ) : (
+                            <Text style={styles.abbrevText}>{abbrevName}</Text>
+                        )}
                     </View>
                     <TouchableOpacity style={styles.viewProfile} activeOpacity={1}
                                       onPress={() => setViewProfileModal(prevState => !prevState)}>
@@ -74,6 +87,14 @@ const Page = () => {
                 </View>
                 {viewProfileModal && <ViewProfileModal setViewProfileModal={setViewProfileModal} fullName={fullName}
                                                        abbrevName={abbrevName}/>}
+                {showSignOutModal &&
+                    <ConfirmSignOutModal
+                        visible={showSignOutModal}
+                        onCancel={() => setShowSignOutModal(false)}
+                        onConfirm={confirmSignOut}
+                    />
+
+                }
             </ScrollView>
         </SafeAreaView>
 
@@ -96,12 +117,17 @@ const styles = StyleSheet.create({
     nameAbbrevView: {
         marginVertical: 24,
         backgroundColor: '#ebeaea',
-        height: 100,
-        width: 100,
+        height: 160,
+        width: 160,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 48,
+        borderRadius: 96,
         padding: 10
+    },
+    avatarImage: {
+        ...StyleSheet.absoluteFillObject,
+        resizeMode: 'cover',
+        borderRadius: 96,
     },
     abbrevText: {
         fontSize: 30,
