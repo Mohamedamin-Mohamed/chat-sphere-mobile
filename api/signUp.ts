@@ -7,7 +7,7 @@ interface Signup {
 
 const signUp = async (signupRequest: Signup, controller: AbortController) => {
     const url = process.env.EXPO_PUBLIC_BACKEND_URL
-    console.log('Url is ', url)
+
     return await fetch(`${url}/auth/signup/email`, {
         method: 'POST',
         headers: {
