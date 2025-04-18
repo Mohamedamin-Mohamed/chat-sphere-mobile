@@ -127,14 +127,8 @@ const SignUp = () => {
                 <View style={styles.container}>
                     <Toast/>
                     <View style={{marginBottom: 20, gap: 16}}>
-                        <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} style={{
-                            backgroundColor: "#a6c0ed",
-                            width: 50,
-                            height: 50,
-                            borderRadius: 24,
-                            justifyContent: "center",
-                            alignItems: "center"
-                        }}>
+                        <TouchableOpacity disabled={disabled} activeOpacity={0.8} onPress={() => router.back()}
+                                          style={styles.signUpButtonView}>
                             <Icon name="arrow-back" size={30} color="#085bd8"/>
                         </TouchableOpacity>
                         <Text style={{color: "#073ea0", fontSize: 26, fontWeight: "500"}}>Create
@@ -202,6 +196,14 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         padding: 24,
         width: "100%"
+    },
+    signUpButtonView: {
+        backgroundColor: "#a6c0ed",
+        width: 50,
+        height: 50,
+        borderRadius: 24,
+        justifyContent: "center",
+        alignItems: "center"
     },
     childContainer: {
         marginVertical: 20,
