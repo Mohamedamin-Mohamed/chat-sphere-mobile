@@ -3,10 +3,11 @@ export type User = {
     name: string,
     oauthProvider: string | null
     picture: string | null
-    signupDate: string,
+    createdAt: string,
     bio: string,
     phoneNumber: string
 }
+
 export type UserSignUp = {
     email: string,
     name: string,

@@ -6,7 +6,7 @@ const initialState: User = {
     name: '',
     oauthProvider: '',
     picture: '',
-    signupDate: '',
+    createdAt: '',
     bio: '',
     phoneNumber: ''
 }
