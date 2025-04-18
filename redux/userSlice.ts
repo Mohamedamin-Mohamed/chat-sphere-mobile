@@ -6,7 +6,9 @@ const initialState: User = {
     name: '',
     oauthProvider: '',
     picture: '',
-    signupDate: ''
+    signupDate: '',
+    bio: '',
+    phoneNumber: ''
 }
 
 export const userSlice = createSlice({
