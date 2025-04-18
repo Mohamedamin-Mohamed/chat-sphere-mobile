@@ -1,15 +1,17 @@
-import {Modal, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import {Dispatch, SetStateAction} from "react";
+import {Image, Modal, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import React, {Dispatch, SetStateAction} from "react";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {usePathname, useRouter} from "expo-router";
 
 interface ViewProfileModalProps {
+    image?: string | null
     setViewProfileModal: Dispatch<SetStateAction<boolean>>,
     fullName: string,
     abbrevName: string
 }
 
-const ViewProfileModal = ({setViewProfileModal, fullName, abbrevName}: ViewProfileModalProps) => {
+const ViewProfileModal = ({image, setViewProfileModal, fullName, abbrevName}: ViewProfileModalProps) => {
+    console.log('Image is ', image)
     const router = useRouter()
     const pathname = usePathname()
 
@@ -25,7 +27,11 @@ const ViewProfileModal = ({setViewProfileModal, fullName, abbrevName}: ViewProfi
                 <TouchableOpacity style={StyleSheet.absoluteFillObject} onPress={() => setViewProfileModal(false)}/>
                 <View style={styles.modalContent}>
                     <View style={styles.nameAbbrevView}>
-                        <Text style={styles.abbrevText}>{abbrevName}</Text>
+                        {image ? (
+                            <Image source={{uri: image}} style={styles.avatarImage}/>
+                        ) : (
+                            <Text style={styles.abbrevText}>{abbrevName}</Text>
+                        )}
                     </View>
                     <Text style={styles.fullNameText}>{fullName}</Text>
                     <View style={styles.joinDate}>
@@ -66,7 +72,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 64,
         padding: 10,
-
+    },
+    avatarImage: {
+        ...StyleSheet.absoluteFillObject,
+        resizeMode: 'cover',
+        borderRadius: 96,
     },
     abbrevText: {
         fontSize: 40,
