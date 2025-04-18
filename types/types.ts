@@ -3,7 +3,9 @@ export type User = {
     name: string,
     oauthProvider: string | null
     picture: string | null
-    signupDate: string
+    signupDate: string,
+    bio: string,
+    phoneNumber: string
 }
 export type UserSignUp = {
     email: string,
