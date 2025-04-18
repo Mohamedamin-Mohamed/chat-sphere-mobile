@@ -252,11 +252,9 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     errorMessage: {
-        fontSize: 18,
-        textAlign: "left",
         color: "red",
-        alignSelf: "flex-start",
-        padding: 8,
+        fontSize: 16,
+        marginVertical: 6
     },
     signInButton: {
         backgroundColor: "#085bd8",
