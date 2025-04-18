@@ -23,6 +23,7 @@ import {signInWithApple, useGoogleOAuth} from "../../hooks/Oauth"
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useDispatch} from "react-redux";
 import {setUserInfo} from "../../redux/userSlice";
+import sanitizeUser from "../../utils/sanitizeUser";
 
 interface SignIn {
     email: string;
@@ -77,11 +78,12 @@ const SignIn = () => {
                 const message = data.message
                 const user = await data.user
 
-                console.log('User in sign in ', user)
-                signInCompletedRef.current = true;
+                const sanitized = sanitizeUser(user)
+                console.log('User in sign in ', sanitized)
 
-                await AsyncStorage.setItem('user', JSON.stringify(user))
-                dispatch(setUserInfo(user))
+                signInCompletedRef.current = true;
+                await AsyncStorage.setItem('user', JSON.stringify(sanitized))
+                dispatch(setUserInfo(sanitized))
 
                 Toast.show({
                     type: 'success',
@@ -130,7 +132,7 @@ const SignIn = () => {
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={styles.container}>
                     <View style={{marginBottom: 16, gap: 10, marginTop: 20}}>
-                        <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} style={styles.backButton}>
+                        <TouchableOpacity disabled={disabled} activeOpacity={0.8} onPress={() => router.back()} style={styles.backButton}>
                             <Icon name="arrow-back" size={30} color="#085bd8"/>
                         </TouchableOpacity>
                     </View>
