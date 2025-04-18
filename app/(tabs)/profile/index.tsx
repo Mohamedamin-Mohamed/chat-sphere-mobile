@@ -1,12 +1,13 @@
 import {Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {router, useNavigation} from "expo-router";
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {Buttons, RootState} from "../../../types/types";
 import React, {useState} from "react";
 import ViewProfileModal from "../../../modals/ViewProfileModal";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {CommonActions} from "@react-navigation/native";
 import ConfirmSignOutModal from "../../../modals/ConfirmSignOutModal";
+import {clearUserInfo} from "../../../redux/userSlice";
 
 
 const Page = () => {
@@ -18,6 +19,7 @@ const Page = () => {
     ]
     const navigation = useNavigation()
     const userInfo = useSelector((state: RootState) => state.userInfo)
+    const dispatch = useDispatch()
     const image = userInfo.picture
     const fullName = userInfo.name
     const splitFullName = userInfo.name.split(' ')
@@ -31,6 +33,7 @@ const Page = () => {
     }
 
     const confirmSignOut = () => {
+        dispatch(clearUserInfo())
         setShowSignOutModal(false);
         navigation.dispatch(CommonActions.reset({
             index: 0,
@@ -85,8 +88,12 @@ const Page = () => {
                         <Text style={{fontSize: 16}}>Sign out</Text>
                     </TouchableOpacity>
                 </View>
-                {viewProfileModal && <ViewProfileModal setViewProfileModal={setViewProfileModal} fullName={fullName}
-                                                       abbrevName={abbrevName}/>}
+                {viewProfileModal &&
+                    <ViewProfileModal
+                        image={image}
+                        setViewProfileModal={setViewProfileModal}
+                        fullName={fullName}
+                        abbrevName={abbrevName}/>}
                 {showSignOutModal &&
                     <ConfirmSignOutModal
                         visible={showSignOutModal}
@@ -117,8 +124,8 @@ const styles = StyleSheet.create({
     nameAbbrevView: {
         marginVertical: 24,
         backgroundColor: '#ebeaea',
-        height: 160,
-        width: 160,
+        height: 124,
+        width: 124,
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 96,
@@ -130,7 +137,7 @@ const styles = StyleSheet.create({
         borderRadius: 96,
     },
     abbrevText: {
-        fontSize: 30,
+        fontSize: 40,
         fontWeight: '800'
     },
     viewProfile: {

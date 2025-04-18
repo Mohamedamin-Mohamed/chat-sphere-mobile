@@ -8,7 +8,6 @@ interface UpdateProfileType {
 }
 
 const updateProfile = async (request: UpdateProfileType, controller: AbortController) => {
-    console.log('Request is ', request)
     const url = process.env.EXPO_PUBLIC_BACKEND_URL
 
     return await fetch(`${url}/api/profile/update`, {
