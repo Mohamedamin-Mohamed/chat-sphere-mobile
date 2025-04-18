@@ -3,10 +3,18 @@ interface PasswordResetRequest {
     password: string
 }
 
-const resetPassword = async (request: PasswordResetRequest, controller: AbortController) => {
+interface PasswordUpdateRequest {
+    email: string,
+    currentPassword: string,
+    newPassword: string
+}
+
+type GenericPasswordRequest = PasswordResetRequest | PasswordUpdateRequest
+
+const resetPassword = async (request: GenericPasswordRequest, controller: AbortController) => {
     const url = process.env.EXPO_PUBLIC_BACKEND_URL
 
-    return await fetch(`${url}/auth/password_reset`, {
+    return await fetch(`${url}/auth/password/reset`, {
         method: 'POST',
         headers: {
             'Content-type': 'application/json'
