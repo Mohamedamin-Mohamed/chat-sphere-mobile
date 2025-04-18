@@ -1,6 +1,5 @@
 import {StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import {router} from "expo-router";
 import {Dispatch, SetStateAction, useState} from "react";
 
 interface AccountInfoProps {
@@ -9,7 +8,7 @@ interface AccountInfoProps {
     setEmailInputActive: Dispatch<SetStateAction<boolean>>,
     setNameInputActive: Dispatch<SetStateAction<boolean>>,
     reInitializeNameInput: () => void,
-    handlePasswordChange: (route: string)=> void,
+    handlePasswordChange: (route: string) => void,
     emailInputActive: boolean
     handleEmailChange: (text: string) => void
 }
@@ -73,12 +72,12 @@ const AccountInfo = ({
                 <View style={styles.sameView}>
                     <Text style={styles.subHeader}>Phone Number</Text>
                     {/*{//this is just a place-holder}*/}
-                    <Text>+1 612-261-7712</Text>
+                    <Text>+1 1282882</Text>
                 </View>
                 <View style={styles.sameView}>
                     <Text style={styles.subHeader}>Password</Text>
                     <TouchableOpacity activeOpacity={0.9} onPress={() => handlePasswordChange('passwordChange')}>
-                        <Icon name='chevron-right' size={30} color='#a9a6a6'/>
+                        <Icon name='chevron-right' size={36} color='gray'/>
                     </TouchableOpacity>
                 </View>
 
@@ -120,6 +119,7 @@ const styles = StyleSheet.create({
     sameView: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+    alignItems: 'center'
     },
     subHeader: {
         fontSize: 16,

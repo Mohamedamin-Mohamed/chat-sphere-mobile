@@ -30,7 +30,7 @@ const VerificationCodeModal = ({
                                    handleModalDisplay,
                                    onCancel
                                }: VerificationCodeModalProps) => {
-    // State management
+
     const [verificationCode, setVerificationCode] = useState<VerificationCodeState>({});
     const [passwordResetModal, setPasswordResetModal] = useState(false);
     const [disabled, setDisabled] = useState(false);
@@ -52,7 +52,6 @@ const VerificationCodeModal = ({
         });
     };
 
-    // Handle verification code input
     const handleChange = useCallback((val: string, index: number) => {
         if (!/^\d*$/.test(val)) return; // only allow digits
 

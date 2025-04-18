@@ -1,4 +1,5 @@
 import {
+    ActivityIndicator,
     Alert,
     Image,
     SafeAreaView,
@@ -11,9 +12,9 @@ import {
 } from "react-native";
 import {router, useNavigation} from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "../../../types/types";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import * as ImagePicker from "expo-image-picker";
 import AvatarModal from "../../../modals/AvatarModal";
 import ViewProfileModal from "../../../modals/ViewProfileModal";
@@ -24,24 +25,30 @@ import AccountInfo from "./AccountInfo";
 import emailValidation from "../../../utils/emailValidation";
 import EmailNotValidModal from "../../../modals/EmailNotValidModal";
 import EmptyNameModal from "../../../modals/EmptyNameModal";
+import updateProfile from "../../../api/updateProfile";
+import Toast from "react-native-toast-message";
+import {setUserInfo} from "../../../redux/userSlice";
 
 const Page = () => {
     const userInfo = useSelector((state: RootState) => state.userInfo);
+    const picture = userInfo.picture
     const email = userInfo.email
+    const dispatch = useDispatch()
 
     const fullName = userInfo.name;
+    const userBio = userInfo.bio
     const splitFullName = fullName.split(' ');
     const abbrevName = splitFullName[0].charAt(0).toUpperCase() + (splitFullName[1]?.charAt(0).toUpperCase() || '');
 
     const [displayAvatarModal, setDisplayAvatarModal] = useState(false);
-    const [image, setImage] = useState('');
+    const [image, setImage] = useState(picture);
     const [viewProfileModal, setViewProfileModal] = useState(false);
-    const [del, setDel] = useState(false);
     const [nameInput, setNameInput] = useState<string>(fullName);
     const [emailInput, setEmailInput] = useState<string>(email)
     const [nameInputActive, setNameInputActive] = useState(false);
     const [emailInputActive, setEmailInputActive] = useState(false)
-    const [bio, setBio] = useState('')
+    const [bio, setBio] = useState(userBio)
+    const [hasSaved, setHasSaved] = useState(false);
 
     const [showSaveButton, setShowSaveButton] = useState(false);
     const navigation = useNavigation();
@@ -49,6 +56,8 @@ const Page = () => {
     const [pendingAction, setPendingAction] = useState<NavigationAction | null>(null);
     const [showEmptyNameModal, setShowEmptyNameModal] = useState(false)
     const [showEmailNotFoundModal, setShowEmailNotFoundModal] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [disabled, setDisabled] = useState(false)
 
     const imagePicker = async () => {
         Alert.alert(
@@ -89,7 +98,7 @@ const Page = () => {
         setEmailInput(text.trim())
     }
 
-    const saveEdits = () => {
+    const saveEdits = async () => {
         // Implement save functionality
         if (!isEmailValid()) {
             setShowEmailNotFoundModal(true);
@@ -99,13 +108,65 @@ const Page = () => {
             setShowEmptyNameModal(true);
             return;
         }
+        console.log(`Image is ${image}, name is ${nameInput.trim()}, bio is ${bio.trim()}, email is ${emailInput.trim()}`)
+        const emailUpdated = emailInput !== email;
+        const nameUpdated = nameInput.trim() !== fullName;
+        const imageUpdated = image !== picture;
+        const bioUpdated = bio !== userBio
 
-    };
+        const request = {
+            email: email,
+            ...(emailUpdated && {newEmail: emailInput}),
+            ...(nameUpdated && {name: nameInput}),
+            ...(imageUpdated && {profileImage: image}),
+            ...(bioUpdated && {bio}),
+            phoneNumber: "484884848"
+        };
 
-    const preventScreenRemoval = image !== '' || fullName.trim() !== nameInput || emailInput.trim() !== email || bio.trim() !== ''
+        try {
+            setLoading(true)
+
+            const response = await updateProfile(request, new AbortController())
+            const data = await response.json()
+            console.log('Data is ', data)
+
+            const succeeded = response.ok
+            const user = data.user
+            const message = data.message
+            dispatch(setUserInfo(user))
+
+            Toast.show({
+                type: succeeded ? 'success' : 'error',
+                text1: message,
+                onShow: () => {
+                    setDisabled(true);
+                },
+                onHide: () => {
+                    setDisabled(false);
+                    if (succeeded) {
+                        setHasSaved(true);
+                        router.back();
+                    }
+                }
+            });
+
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setLoading(false)
+        }
+
+    }
+    const preventScreenRemoval =
+        !hasSaved && (
+            image !== picture ||
+            fullName.trim() !== nameInput ||
+            emailInput.trim() !== email ||
+            bio.trim() !== userBio
+        );
 
     useEffect(() => {
-        const somethingChanged = image !== '' || fullName !== nameInput || emailInput !== email || bio.trim() !== ''
+        const somethingChanged = image !== picture || fullName !== nameInput || emailInput !== email || bio.trim() !== userBio
 
         if (somethingChanged) {
             setShowSaveButton(true);
@@ -123,17 +184,19 @@ const Page = () => {
             setShowEmailNotFoundModal(true);
             return;
         }
-
         setPendingAction(data.action);
         setShowDiscardModal(true);
     });
 
     const confirmDiscard = () => {
         if (pendingAction) {
-            navigation.dispatch(pendingAction);
-            setPendingAction(null);
+            navigation.dispatch(pendingAction)
+        } else {
+            router.back()
         }
-        setShowDiscardModal(false);
+        setPendingAction(null)
+        setShowDiscardModal(false)
+
     };
 
     const cancelDiscard = () => {
@@ -182,15 +245,6 @@ const Page = () => {
         setNameInput(fullName)
     }, [emailInputActive])
 
-    const handleBackPress = () => {
-        if (preventScreenRemoval) {
-            setShowDiscardModal(true);
-            return;
-        }
-
-        router.back();
-    }
-
     const handlePasswordChange = (route: string) => {
         setNameInput(fullName)
         setEmailInput(email)
@@ -203,7 +257,7 @@ const Page = () => {
                 <View style={styles.buttonView}>
                     <TouchableOpacity
                         activeOpacity={0.8}
-                        onPress={handleBackPress}
+                        onPress={() => router.back()}
                         style={styles.backButton}>
                         <Icon name="arrow-back" size={28} color="white"/>
                     </TouchableOpacity>
@@ -212,7 +266,9 @@ const Page = () => {
                 {showSaveButton && (
                     <TouchableOpacity style={styles.saveButton}
                                       onPress={saveEdits} activeOpacity={0.9}>
-                        <Text style={styles.saveButtonText}>Save</Text>
+                        {loading ? <ActivityIndicator size='small' color='white'/> :
+                            <Text style={styles.saveButtonText}>Save</Text>
+                        }
                     </TouchableOpacity>
                 )}
             </View>
@@ -248,7 +304,7 @@ const Page = () => {
                         >
                             <TextInput
                                 value={nameInput}
-                                onChangeText={(text) => setNameInput(text.trim())}
+                                onChangeText={setNameInput}
                                 onFocus={() => {
                                     if (emailInputActive && !isEmailValid()) {
                                         setShowEmailNotFoundModal(true);
@@ -257,7 +313,6 @@ const Page = () => {
                                     setNameInputActive(true);
                                     setEmailInputActive(false);
                                     reInitializeEmailInput();
-                                    setDel(true);
                                 }}
                                 editable={!(emailInputActive && !isEmailValid())}
                                 multiline={false}
@@ -282,7 +337,7 @@ const Page = () => {
                         <Text style={styles.bioText}>Bio</Text>
                         <TextInput
                             value={bio}
-                            onChangeText={text => setBio(text.trim())}
+                            onChangeText={setBio}
                             multiline
                             style={styles.bioTextInput}
                             placeholder="Tell us about yourself..."
@@ -323,6 +378,7 @@ const Page = () => {
                     <EmailNotValidModal showModal={showEmailNotFoundModal} discardModal={handleEmailModalClose}/>}
                 {showEmptyNameModal &&
                     <EmptyNameModal showModal={showEmptyNameModal} discardModal={handleNameModalClose}/>}
+                <Toast position='top'/>
             </ScrollView>
         </SafeAreaView>
     );
@@ -465,6 +521,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 8,
         textAlignVertical: 'top',
+        fontSize: 16
     },
     iconView: {
         position: 'absolute',
