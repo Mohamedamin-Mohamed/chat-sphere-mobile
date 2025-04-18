@@ -1,24 +1,56 @@
-import {Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,} from "react-native";
+import {
+    ActivityIndicator,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import {router} from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import {useState} from "react";
+import React, {useState} from "react";
 import Toast from "react-native-toast-message";
+import {useSelector} from "react-redux";
+import {RootState} from "../../../types/types";
+import resetPassword from "../../../api/resetPassword";
+import PasswordResetScreen from "../../../components/PasswordResetScreen";
 
 type PasswordType = {
     currentPassword: string;
     newPassword: string;
     confirmNewPassword: string;
-};
+}
 
+type PasswordValidationType = {
+    currentPassword: string,
+    newPassword: string
+}
+
+type Passwords = {
+    password: string;
+    confirmPassword: string;
+}
 const Index = () => {
-    const [passwordDetails, setPasswordDetails] = useState<PasswordType>({
+    const email = useSelector((state: RootState) => state.userInfo).email
+    const initialPasswordDetails = {
         currentPassword: '',
         newPassword: '',
-        confirmNewPassword: '',
-    });
-
+        confirmNewPassword: ''
+    }
+    const [passwordDetails, setPasswordDetails] = useState<PasswordType>(initialPasswordDetails)
+    const [validationErr, setValidationErr] = useState<Partial<PasswordValidationType | null>>(null)
     const [focusedField, setFocusedField] = useState<string | null>(null);
     const [disabled, setDisabled] = useState(false);
+    const [passwordReset, setPasswordReset] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [passwords, setPasswords] = useState<Passwords>({
+        password: "",
+        confirmPassword: ""
+    });
+    const [passwordError, setPasswordError] = useState("");
 
     const handleChange = (key: keyof PasswordType, val: string) => {
         setPasswordDetails(prevState => ({
@@ -33,50 +65,124 @@ const Index = () => {
         return password.length >= 16 || (password.length >= 8 && hasLetter && hasNumber);
     };
 
-    const passwordValidation = (): string | null => {
+    const passwordValidation = (): Record<string, string> | null => {
+        const returnType: Record<string, string> = {}
         if (!validatePassword(passwordDetails.currentPassword)) {
-            return "Current: 16+ chars or 8+ with letter & number.";
+            returnType['currentPassword'] = 'Current password must be 16+ chars or 8+ with letter & number.'
+        } else if (!passwordDetails.newPassword || !passwordDetails.confirmNewPassword) {
+            returnType['newPassword'] = 'New password fields are required.'
+        } else if (passwordDetails.newPassword !== passwordDetails.confirmNewPassword) {
+            returnType['newPassword'] = "Passwords don't match."
+        } else if (!validatePassword(passwordDetails.newPassword)) {
+            returnType['newPassword'] = 'New password must be 16+ chars or 8+ with letter & number.'
         }
 
-        if (!passwordDetails.newPassword || !passwordDetails.confirmNewPassword) {
-            return "New password fields are required.";
-        }
-
-        if (!validatePassword(passwordDetails.newPassword)) {
-            return "New: 16+ chars or 8+ with letter & number.";
-        }
-
-        if (passwordDetails.newPassword !== passwordDetails.confirmNewPassword) {
-            return "Passwords don't match.";
-        }
-
-        return null;
+        return Object.keys(returnType).length > 0 ? returnType : null;
     }
 
-    const handleChangePassword = () => {
+    const handleChangePassword = async () => {
         setFocusedField(null);
         const validationError = passwordValidation();
         if (validationError) {
-            showToastMessage(validationError);
+            setValidationErr(validationError)
             return;
         }
 
         //implement password change logic in the backend
+        setValidationErr({})
+        setLoading(true)
+        const request = {
+            email: email,
+            currentPassword: passwordDetails.currentPassword,
+            newPassword: passwordDetails.newPassword
+        }
+        try {
+            const response = await resetPassword(request, new AbortController());
+            const succeeded = response.ok;
+            const message = await response.text();
+            showToastMessage(message, succeeded)
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setLoading(false)
+        }
+
+    }
+
+    const handlePasswordChange = (key: string, val: string) => {
+        setPasswords((prevState) => ({
+            ...prevState,
+            [key]: val,
+        }));
     };
 
-    const showToastMessage = (validationErr: string) => {
+    const showToastMessage = (message: string, succeeded: boolean) => {
+        console.log(succeeded)
         Toast.show({
-            type: 'error',
-            text1: validationErr,
+            type: succeeded ? 'success' : 'error',
+            text1: message,
             onShow: () => setDisabled(true),
-            onHide: () => setDisabled(false),
+            onHide: () => {
+                setDisabled(false)
+                if (succeeded) {
+                    router.back()
+                }
+            },
         });
     };
 
     const handleForgotPassword = () => {
-        setFocusedField(null);
-        // TODO: Implement forgot password flow
-    };
+        setFocusedField(null)
+        setValidationErr(null)
+        setPasswordDetails(initialPasswordDetails)
+        setPasswordReset(true)
+    }
+
+    const handleModalDisplay = () => {
+        setPasswordReset(false)
+    }
+
+    const handleResetPassword = async () => {
+        setPasswordError("");
+
+        if (!passwords.password || !passwords.confirmPassword) {
+            setPasswordError("Passwords are required");
+            return;
+        }
+
+        if (passwords.password !== passwords.confirmPassword) {
+            setPasswordError("Passwords don't match");
+            return;
+        }
+
+        if (!validatePassword(passwords.password)) {
+            setPasswordError("Password must be at least 16 characters, or 8 characters with one number and one letter.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const request = {email: email, password: passwords.password};
+            const response = await resetPassword(request, new AbortController());
+            const succeeded = response.ok;
+            const message = await response.text();
+
+            Toast.show({
+                type: succeeded ? "success" : "error",
+                text1: message,
+                ...(succeeded && {text2: 'Redirecting'}),
+                onShow: () => setDisabled(true),
+                onHide: () => {
+                    handleModalDisplay();
+                    setDisabled(false);
+                }
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <SafeAreaView style={styles.wrapperContainer}>
@@ -107,6 +213,8 @@ const Index = () => {
                             onFocus={() => setFocusedField('currentPassword')}
                             onBlur={() => setFocusedField(null)}
                         />
+                        {validationErr?.currentPassword &&
+                            <Text style={styles.passwordResetErrorText}>{validationErr.currentPassword}</Text>}
                     </View>
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>New Password</Text>
@@ -139,13 +247,19 @@ const Index = () => {
                             onFocus={() => setFocusedField('confirmNewPassword')}
                             onBlur={() => setFocusedField(null)}
                         />
+                        {validationErr?.newPassword &&
+                            <Text style={styles.passwordResetErrorText}>{validationErr.newPassword}</Text>}
                     </View>
                     <View style={styles.buttonsView}>
                         <TouchableOpacity
+                            disabled={loading}
                             style={styles.changePassword}
                             activeOpacity={0.9}
                             onPress={handleChangePassword}>
-                            <Text style={styles.changePasswordText}>Change Password</Text>
+                            {loading ? <ActivityIndicator size='small' color='white'/> :
+                                <Text style={styles.changePasswordText}>Change Password</Text>
+                            }
+
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.forgotPassword}
@@ -154,8 +268,22 @@ const Index = () => {
                             <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
                         </TouchableOpacity>
                     </View>
+
                 </View>
+                {passwordReset && (
+                    <View style={styles.modalContainer}>
+                        <PasswordResetScreen
+                            loading={loading}
+                            onCancel={handleModalDisplay}
+                            disabled={disabled}
+                            passwordError={passwordError}
+                            handlePasswordChange={handlePasswordChange}
+                            handleResetPassword={handleResetPassword}
+                        />
+                    </View>
+                )}
             </ScrollView>
+
             <Toast position='top' topOffset={Platform.OS === 'android' ? 50 : 70}/>
         </SafeAreaView>
     );
@@ -235,6 +363,20 @@ const styles = StyleSheet.create({
         color: '#085bd8',
         fontSize: 16,
     },
+    passwordResetErrorText: {
+        color: "red",
+        fontSize: 16
+    },
+    modalContainer: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        justifyContent: 'center',
+        zIndex: 10, // Make sure it's above everything else
+    },
+
 });
 
 export default Index;
