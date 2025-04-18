@@ -13,7 +13,7 @@ import {
 import {router, useNavigation} from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {useDispatch, useSelector} from "react-redux";
-import {RootState} from "../../../types/types";
+import {RootState, User} from "../../../types/types";
 import React, {useEffect, useState} from "react";
 import * as ImagePicker from "expo-image-picker";
 import AvatarModal from "../../../modals/AvatarModal";
@@ -34,7 +34,6 @@ const Page = () => {
     const picture = userInfo.picture
     const email = userInfo.email
     const dispatch = useDispatch()
-
     const fullName = userInfo.name;
     const userBio = userInfo.bio
     const splitFullName = fullName.split(' ');
@@ -127,28 +126,17 @@ const Page = () => {
             setLoading(true)
 
             const response = await updateProfile(request, new AbortController())
-            const data = await response.json()
-            console.log('Data is ', data)
-
             const succeeded = response.ok
-            const user = data.user
-            const message = data.message
-            dispatch(setUserInfo(user))
 
-            Toast.show({
-                type: succeeded ? 'success' : 'error',
-                text1: message,
-                onShow: () => {
-                    setDisabled(true);
-                },
-                onHide: () => {
-                    setDisabled(false);
-                    if (succeeded) {
-                        setHasSaved(true);
-                        router.back();
-                    }
-                }
-            });
+            if (succeeded) {
+                const data = await response.json()
+                const message = data.message
+                const user = data.user
+                showToastMessage(succeeded, message, user);
+            } else {
+                const text = await response.text();
+                showToastMessage(false, text);
+            }
 
         } catch (err) {
             console.error(err)
@@ -157,13 +145,32 @@ const Page = () => {
         }
 
     }
+
+    const showToastMessage = (succeeded: boolean, message: string, user?: User) => {
+        Toast.show({
+            type: succeeded ? 'success' : 'error',
+            text1: message,
+            onShow: () => {
+                setDisabled(true);
+            },
+            onHide: () => {
+                setDisabled(false);
+                if (succeeded) {
+                    dispatch(setUserInfo(user))
+                    setHasSaved(true);
+                    router.back();
+                }
+            }
+        })
+    }
+
     const preventScreenRemoval =
         !hasSaved && (
             image !== picture ||
             fullName.trim() !== nameInput ||
             emailInput.trim() !== email ||
             bio.trim() !== userBio
-        );
+        )
 
     useEffect(() => {
         const somethingChanged = image !== picture || fullName !== nameInput || emailInput !== email || bio.trim() !== userBio
@@ -256,6 +263,7 @@ const Page = () => {
             <View style={styles.headerContainer}>
                 <View style={styles.buttonView}>
                     <TouchableOpacity
+                        disabled={disabled}
                         activeOpacity={0.8}
                         onPress={() => router.back()}
                         style={styles.backButton}>
@@ -264,7 +272,7 @@ const Page = () => {
                     <Text style={styles.backButtonText}>Profile</Text>
                 </View>
                 {showSaveButton && (
-                    <TouchableOpacity style={styles.saveButton}
+                    <TouchableOpacity style={styles.saveButton} disabled={disabled}
                                       onPress={saveEdits} activeOpacity={0.9}>
                         {loading ? <ActivityIndicator size='small' color='white'/> :
                             <Text style={styles.saveButtonText}>Save</Text>
@@ -362,6 +370,7 @@ const Page = () => {
                 )}
                 {viewProfileModal && (
                     <ViewProfileModal
+                        image={image}
                         setViewProfileModal={setViewProfileModal}
                         fullName={fullName}
                         abbrevName={abbrevName}
