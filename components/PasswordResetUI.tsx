@@ -5,12 +5,12 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 const RESET_IMAGE = require("../assets/images/reset.png");
 
 interface PasswordResetUIProps {
-    loading: boolean;
+    loading: boolean
     disabled: boolean
-    passwordError: string;
-    handlePasswordChange: (key: string, val: string) => void;
-    handleResetPassword: () => Promise<void>;
-    onCancel: () => void,
+    passwordError: string
+    handlePasswordChange: (key: string, val: string) => void
+    handleResetPassword: () => Promise<void>
+    onCancel: () => void
 }
 
 const PasswordResetUI: React.FC<PasswordResetUIProps> = ({
@@ -72,7 +72,7 @@ const PasswordResetUI: React.FC<PasswordResetUIProps> = ({
 
 const styles = StyleSheet.create({
     closeIcon: {
-        marginLeft: "auto"
+        marginLeft: "auto",
     },
     passwordResetImage: {
         width: "80%",
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
         alignSelf: "center"
     },
     passwordFormContainer: {
-        marginVertical: 10,
+        marginTop: 10,
         gap: 16
     },
     input: {
@@ -115,7 +115,6 @@ const styles = StyleSheet.create({
     },
     passwordResetErrorText: {
         color: "red",
-        marginTop: 8,
     },
 });
 
