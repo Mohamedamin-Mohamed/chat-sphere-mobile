@@ -175,6 +175,7 @@ const Index = () => {
                 onHide: () => {
                     handleModalDisplay();
                     setDisabled(false);
+                    router.back()
                 }
             });
         } catch (err) {
