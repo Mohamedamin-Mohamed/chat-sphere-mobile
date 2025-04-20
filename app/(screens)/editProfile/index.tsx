@@ -13,7 +13,7 @@ import {
 import {router, useNavigation} from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {useDispatch, useSelector} from "react-redux";
-import {RootState, User} from "../../../types/types";
+import {RootState} from "../../../types/types";
 import React, {useEffect, useState} from "react";
 import * as ImagePicker from "expo-image-picker";
 import AvatarModal from "../../../modals/AvatarModal";
@@ -28,6 +28,7 @@ import EmptyNameModal from "../../../modals/EmptyNameModal";
 import updateProfile from "../../../api/updateProfile";
 import Toast from "react-native-toast-message";
 import {setUserInfo} from "../../../redux/userSlice";
+import sanitizeUser from "../../../utils/sanitizeUser";
 
 const Page = () => {
     const userInfo = useSelector((state: RootState) => state.userInfo);
@@ -86,11 +87,7 @@ const Page = () => {
 
     const handleDisplayAvatarModal = () => {
         setDisplayAvatarModal(prev => !prev);
-    };
-
-    const handleNameChange = (text: string) => {
-        setNameInput(text.trim());
-    };
+    }
 
     const handleEmailChange = (text: string) => {
         setNameInput(fullName)
@@ -107,7 +104,7 @@ const Page = () => {
             setShowEmptyNameModal(true);
             return;
         }
-        console.log(`Image is ${image}, name is ${nameInput.trim()}, bio is ${bio.trim()}, email is ${emailInput.trim()}`)
+
         const emailUpdated = emailInput !== email;
         const nameUpdated = nameInput.trim() !== fullName;
         const imageUpdated = image !== picture;
@@ -119,7 +116,7 @@ const Page = () => {
             ...(nameUpdated && {name: nameInput}),
             ...(imageUpdated && {profileImage: image}),
             ...(bioUpdated && {bio}),
-            phoneNumber: "484884848"
+            phoneNumber: ""
         };
 
         try {
@@ -132,7 +129,8 @@ const Page = () => {
                 const data = await response.json()
                 const message = data.message
                 const user = data.user
-                showToastMessage(succeeded, message, user);
+                const sanitizedUser = sanitizeUser(user)
+                showToastMessage(succeeded, message, sanitizedUser);
             } else {
                 const text = await response.text();
                 showToastMessage(false, text);
@@ -146,7 +144,7 @@ const Page = () => {
 
     }
 
-    const showToastMessage = (succeeded: boolean, message: string, user?: User) => {
+    const showToastMessage = (succeeded: boolean, message: string, user?: Record<string, string>) => {
         Toast.show({
             type: succeeded ? 'success' : 'error',
             text1: message,
@@ -290,7 +288,7 @@ const Page = () => {
                         )}
                         <TouchableOpacity onPress={handleDisplayAvatarModal} style={styles.iconView}
                                           activeOpacity={0.8}>
-                            <Icon name="edit" size={18} color="white"/>
+                            <Icon name="edit" size={16} color="white"/>
                         </TouchableOpacity>
                     </View>
 
@@ -446,8 +444,8 @@ const styles = StyleSheet.create({
     nameAbbrevView: {
         marginVertical: 24,
         backgroundColor: 'white',
-        height: 160,
-        width: 160,
+        height: 172,
+        width: 172,
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 96,

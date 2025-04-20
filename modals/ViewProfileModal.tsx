@@ -2,6 +2,8 @@ import {Image, Modal, StyleSheet, Text, TouchableOpacity, View} from "react-nati
 import React, {Dispatch, SetStateAction} from "react";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {usePathname, useRouter} from "expo-router";
+import {useSelector} from "react-redux";
+import {RootState} from "../types/types";
 
 interface ViewProfileModalProps {
     image?: string | null
@@ -11,10 +13,9 @@ interface ViewProfileModalProps {
 }
 
 const ViewProfileModal = ({image, setViewProfileModal, fullName, abbrevName}: ViewProfileModalProps) => {
-    console.log('Image is ', image)
     const router = useRouter()
     const pathname = usePathname()
-
+    const joinedDate = useSelector((state: RootState) => state.userInfo).createdAt
     const handleProfileEdit = () => {
         setViewProfileModal(false)
         if (!pathname.includes('/editProfile')) {
@@ -36,7 +37,7 @@ const ViewProfileModal = ({image, setViewProfileModal, fullName, abbrevName}: Vi
                     <Text style={styles.fullNameText}>{fullName}</Text>
                     <View style={styles.joinDate}>
                         <Icon name="timeline" size={20} color="#898686FF"/>
-                        <Text style={styles.joinDateText}>Since Feb 2025</Text>
+                        <Text style={styles.joinDateText}>Since {joinedDate}</Text>
                     </View>
                     <TouchableOpacity style={styles.editProfile} activeOpacity={0.4} onPress={handleProfileEdit}>
                         <Icon name="edit" size={25} color="black"/>
