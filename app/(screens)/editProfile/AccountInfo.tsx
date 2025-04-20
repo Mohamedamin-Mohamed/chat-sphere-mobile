@@ -1,6 +1,9 @@
 import {StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import {Dispatch, SetStateAction, useState} from "react";
+import {Dispatch, SetStateAction} from "react";
+import {router} from "expo-router";
+import {RootState} from "../../../types/types";
+import {useSelector} from "react-redux";
 
 interface AccountInfoProps {
     emailInput: string,
@@ -10,7 +13,7 @@ interface AccountInfoProps {
     reInitializeNameInput: () => void,
     handlePasswordChange: (route: string) => void,
     emailInputActive: boolean
-    handleEmailChange: (text: string) => void
+    handleEmailChange: (text: string) => void,
 }
 
 const AccountInfo = ({
@@ -21,17 +24,16 @@ const AccountInfo = ({
                          reInitializeNameInput,
                          handlePasswordChange,
                          handleEmailChange,
-                         emailInputActive
+                         emailInputActive,
                      }: AccountInfoProps) => {
-    const [del, setDel] = useState(false);
 
+    const phoneNumber = useSelector((state: RootState) => state.userInfo).phoneNumber
     const handlePressing = () => {
         setEmailInput('')
         reInitializeNameInput()
     }
 
     const handlePressIn = () => {
-        setDel(true)
         setEmailInputActive(true)
     }
 
@@ -39,7 +41,7 @@ const AccountInfo = ({
         <View style={styles.container}>
             <Text style={styles.accountInfoText}>Account info</Text>
             <View style={styles.infoView}>
-                <Icon name='lock' size={20} color='#545454'/>
+                <Icon name='visibility-off' size={20} color='#545454'/>
                 <Text style={styles.visibilityText}>Only visible to you</Text>
             </View>
             <View style={styles.childContainer}>
@@ -66,24 +68,26 @@ const AccountInfo = ({
                                 <Icon name="cancel" size={20} color="gray"/>
                             </TouchableOpacity>
                         )}
-
                     </TouchableOpacity>
                 </View>
-                <View style={styles.sameView}>
+                <TouchableOpacity style={styles.sameView} activeOpacity={0.9} onPress={() => router.push('addNumber')}>
                     <Text style={styles.subHeader}>Phone Number</Text>
-                    {/*{//this is just a place-holder}*/}
-                    <Text>+1 1282882</Text>
-                </View>
-                <View style={styles.sameView}>
+                    <View>
+                        {
+                            phoneNumber ? <Text>{phoneNumber}</Text> :
+                                <Icon name='chevron-right' size={36} color='gray'/>
+                        }
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.sameView} activeOpacity={0.9}
+                                  onPress={() => handlePasswordChange('passwordChange')}>
                     <Text style={styles.subHeader}>Password</Text>
-                    <TouchableOpacity activeOpacity={0.9} onPress={() => handlePasswordChange('passwordChange')}>
+                    <View>
                         <Icon name='chevron-right' size={36} color='gray'/>
-                    </TouchableOpacity>
-                </View>
-
+                    </View>
+                </TouchableOpacity>
             </View>
             <View>
-
             </View>
         </View>
     )
@@ -119,7 +123,7 @@ const styles = StyleSheet.create({
     sameView: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-    alignItems: 'center'
+        alignItems: 'center'
     },
     subHeader: {
         fontSize: 16,
