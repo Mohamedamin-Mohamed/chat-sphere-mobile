@@ -74,7 +74,14 @@ const AccountInfo = ({
                     <Text style={styles.subHeader}>Phone Number</Text>
                     <View>
                         {
-                            phoneNumber ? <Text>{phoneNumber}</Text> :
+                            phoneNumber ? (
+                                    <Text style={styles.phoneNumberText}>
+                                        {phoneNumber.startsWith('+1') ?
+                                            `${phoneNumber.slice(0, 2)} ${phoneNumber.slice(2, 5)}-${phoneNumber.slice(5, 8)}-${phoneNumber.slice(8, 12)}` :
+                                            `+1 ${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`
+                                        }
+                                    </Text>
+                                ) :
                                 <Icon name='chevron-right' size={36} color='gray'/>
                         }
                     </View>
@@ -126,6 +133,9 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     subHeader: {
+        fontSize: 16,
+    },
+    phoneNumberText: {
         fontSize: 16,
     },
     textInputView: {

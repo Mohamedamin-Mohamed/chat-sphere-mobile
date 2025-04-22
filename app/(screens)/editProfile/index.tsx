@@ -37,6 +37,7 @@ const Page = () => {
     const dispatch = useDispatch()
     const fullName = userInfo.name;
     const userBio = userInfo.bio
+    const phoneNumber = userInfo.phoneNumber
     const splitFullName = fullName.split(' ');
     const abbrevName = splitFullName[0].charAt(0).toUpperCase() + (splitFullName[1]?.charAt(0).toUpperCase() || '');
 
@@ -116,7 +117,7 @@ const Page = () => {
             ...(nameUpdated && {name: nameInput}),
             ...(imageUpdated && {profileImage: image}),
             ...(bioUpdated && {bio}),
-            phoneNumber: ""
+            phoneNumber: phoneNumber
         };
 
         try {

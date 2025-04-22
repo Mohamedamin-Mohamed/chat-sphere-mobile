@@ -17,7 +17,7 @@ interface VerificationUIProps {
     handleOtpRegeneration: () => Promise<void>;
 }
 
-const VerificationUI: React.FC<VerificationUIProps> = ({
+const CodeVerificationUI: React.FC<VerificationUIProps> = ({
                                                            verificationCode,
                                                            loading,
                                                            disabled,
@@ -152,4 +152,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default VerificationUI;
+export default CodeVerificationUI;
