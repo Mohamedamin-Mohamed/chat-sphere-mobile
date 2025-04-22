@@ -9,7 +9,7 @@ import resetPassword from "../api/resetPassword";
 
 import emailValidation from "../utils/emailValidation";
 
-import VerificationUI from "../components/VerificationUI";
+import CodeVerificationUI from "../components/CodeVerificationUI";
 import PasswordResetUI from "../components/PasswordResetUI";
 
 type VerificationCodeState = Record<number, string>;
@@ -215,7 +215,7 @@ const VerificationCodeModal = ({
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                     {!passwordResetModal ? (
-                        <VerificationUI
+                        <CodeVerificationUI
                             verificationCode={verificationCode}
                             loading={loading}
                             disabled={disabled}
