@@ -133,7 +133,7 @@ const VerificationCodeModal = ({
                     onShow: () => setDisabled(true),
                     onHide: () => {
                         setDisabled(false)
-                        setPasswordResetModal(true); // Display the modal after toast is hidden
+                        setPasswordResetModal(true)
                     }
                 });
             }
