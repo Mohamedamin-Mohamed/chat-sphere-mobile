@@ -7,14 +7,11 @@ import {RootState} from "../../../types/types";
 import sendVerificationPin from "../../../api/sendVerificationPin";
 import PinVerificationUI from "../../../components/PinVerificationUI";
 
-type VerificationCodeState = Record<number, string>;
-
 const Page = () => {
     const userInfo = useSelector((state: RootState) => state.userInfo)
     const email = userInfo.email
     const phoneNumber = userInfo.phoneNumber
 
-    const [disabled, setDisabled] = useState(false)
     const [phoneInput, setPhoneInput] = useState('')
     const [loading, setLoading] = useState(false)
     const [showPinVerificationModal, setShowPinVerificationModal] = useState(false)
@@ -23,12 +20,14 @@ const Page = () => {
 
     const handleSubmit = async () => {
         const cleanedPhone = phoneInput.replace(/\D/g, '');
-
         if (cleanedPhone.length !== 10) {
             setPhoneError('Please enter a valid 10-digit phone number.');
             return;
         }
-
+        if (cleanedPhone == phoneNumber) {
+            setPhoneError('Please enter a new phone number')
+            return
+        }
         setPhoneError('');
 
         const request = {
@@ -47,7 +46,6 @@ const Page = () => {
                 setPhoneError(message);
                 return;
             }
-
             setShowPinVerificationModal(true);
         } catch (err) {
             console.error(err);
@@ -63,7 +61,7 @@ const Page = () => {
             <View style={styles.headerContainer}>
                 <View style={styles.buttonView}>
                     <TouchableOpacity
-                        disabled={disabled}
+                        disabled={loading}
                         activeOpacity={0.8}
                         onPress={() => router.back()}
                         style={styles.backButton}>

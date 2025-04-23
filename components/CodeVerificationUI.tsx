@@ -80,47 +80,61 @@ const CodeVerificationUI: React.FC<VerificationUIProps> = ({
 
 const styles = StyleSheet.create({
     closeIcon: {
-        marginLeft: "auto"
+        marginLeft: "auto",
+        marginBottom: 16,
     },
     image: {
         width: "80%",
         height: 200,
-        alignSelf: "center"
+        alignSelf: "center",
+        marginBottom: 16
+    },
+    headerText: {
+        fontSize: 24,
+        textAlign: "center",
+        fontWeight: '600',
+        marginBottom: 4
+    },
+    subHeaderText: {
+        textAlign: 'center',
+        fontSize: 16,
+        fontWeight: "300",
+        marginBottom: 16
     },
     codeInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         marginVertical: 10,
-        gap: 10
+        gap: 10,
+        marginBottom: 16
     },
     verificationInput: {
-        borderColor: "gray",
-        borderRadius: 4,
-        borderWidth: 0.4,
-        padding: 10,
-        width: 40,
-        textAlign: 'center'
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 6,
+        width: 42,
+        height: 48,
+        textAlign: "center",
+        fontSize: 18,
+        fontWeight: "bold",
+        backgroundColor: "#f9f9f9"
     },
     filledInput: {
         borderColor: "#085bd8",
-        borderWidth: 1
+        backgroundColor: "#e6efff"
     },
-    headerText: {
-        fontSize: 24,
-        textAlign: "center",
-        fontWeight: '600',
-    },
-    subHeaderText: {
+    errorText: {
+        color: 'red',
         textAlign: 'center',
-        fontSize: 18,
-        fontWeight: "300"
+        marginTop: 8
     },
     verifyButton: {
         backgroundColor: "#085bd8",
-        padding: 15,
+        paddingVertical: 15,
+        paddingHorizontal: 30,
         borderRadius: 8,
-        marginVertical: 16,
+        marginTop: 10,
         alignSelf: 'center'
     },
     verifyText: {
@@ -133,15 +147,9 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         gap: 5,
-        marginTop: 20
-    },
-    errorText: {
-        color: 'red',
-        textAlign: 'center',
-        marginTop: 8
+        marginTop: 24
     },
     footerText: {
-        textAlign: "center",
         fontSize: 16
     },
     linkText: {
@@ -150,6 +158,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textDecorationLine: "underline"
     }
-});
+})
 
 export default CodeVerificationUI;
