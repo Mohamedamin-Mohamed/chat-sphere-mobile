@@ -2,10 +2,11 @@ import {StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native"
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {Dispatch, SetStateAction} from "react";
 import {router} from "expo-router";
-import {RootState} from "../../../types/types";
-import {useSelector} from "react-redux";
+import {User} from "../../../types/types";
 
 interface AccountInfoProps {
+    userInfo: User
+    disabled: boolean,
     emailInput: string,
     setEmailInput: Dispatch<SetStateAction<string>>,
     setEmailInputActive: Dispatch<SetStateAction<boolean>>,
@@ -17,6 +18,8 @@ interface AccountInfoProps {
 }
 
 const AccountInfo = ({
+                         userInfo,
+                         disabled,
                          emailInput,
                          setEmailInput,
                          setEmailInputActive,
@@ -27,13 +30,16 @@ const AccountInfo = ({
                          emailInputActive,
                      }: AccountInfoProps) => {
 
-    const phoneNumber = useSelector((state: RootState) => state.userInfo).phoneNumber
+    const phoneNumber = userInfo.phoneNumber
+    const providerEnabled = userInfo.oauthProvider !== ''
+
     const handlePressing = () => {
         setEmailInput('')
         reInitializeNameInput()
     }
 
     const handlePressIn = () => {
+        if (disabled || providerEnabled) return
         setEmailInputActive(true)
     }
 
@@ -47,8 +53,9 @@ const AccountInfo = ({
             <View style={styles.childContainer}>
                 <View style={styles.sameView}>
                     <Text style={styles.subHeader}>Email</Text>
-                    <TouchableOpacity style={styles.textInputView}>
+                    <TouchableOpacity style={styles.textInputView} activeOpacity={0.9}>
                         <TextInput
+                            editable={!disabled && !providerEnabled}
                             value={emailInput}
                             onChangeText={handleEmailChange}
                             onPressIn={handlePressIn}
@@ -64,13 +71,14 @@ const AccountInfo = ({
                             }}
                         />
                         {emailInputActive && emailInput !== '' && (
-                            <TouchableOpacity onPress={handlePressing}>
+                            <TouchableOpacity disabled={disabled} onPress={handlePressing} activeOpacity={1}>
                                 <Icon name="cancel" size={20} color="gray"/>
                             </TouchableOpacity>
                         )}
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.sameView} activeOpacity={0.9} onPress={() => router.push('addNumber')}>
+                <TouchableOpacity style={styles.sameView} activeOpacity={0.9}
+                                  onPress={() => !disabled && router.push('addNumber')}>
                     <Text style={styles.subHeader}>Phone Number</Text>
                     <View>
                         {
@@ -86,13 +94,15 @@ const AccountInfo = ({
                         }
                     </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.sameView} activeOpacity={0.9}
-                                  onPress={() => handlePasswordChange('passwordChange')}>
-                    <Text style={styles.subHeader}>Password</Text>
-                    <View>
-                        <Icon name='chevron-right' size={36} color='gray'/>
-                    </View>
-                </TouchableOpacity>
+                {!providerEnabled &&
+                    <TouchableOpacity style={styles.sameView} activeOpacity={0.9}
+                                      onPress={() => handlePasswordChange('passwordChange')}>
+                        <Text style={styles.subHeader}>Password</Text>
+                        <View>
+                            <Icon name='chevron-right' size={36} color='gray'/>
+                        </View>
+                    </TouchableOpacity>
+                }
             </View>
             <View>
             </View>
