@@ -1,5 +1,5 @@
 import {router} from "expo-router"
-import {useState} from "react";
+import React, {useState} from "react";
 import {
     ActivityIndicator,
     Image,
@@ -28,7 +28,6 @@ const EmailLookup = () => {
     const [disabled, setDisabled] = useState(false)
     const [loading, setLoading] = useState(false)
 
-    // Replace separate modal states with a single flow state
     const [currentFlowStep, setCurrentFlowStep] = useState<ResetFlow>(ResetFlow.EmailLookup)
 
     const forgot = require('../../assets/images/forgot.png')
@@ -64,7 +63,6 @@ const EmailLookup = () => {
                     onShow: () => setDisabled(true),
                     onHide: () => {
                         setDisabled(false)
-                        // Move to verification step
                         setCurrentFlowStep(ResetFlow.Verification)
                     }
                 })
@@ -83,9 +81,16 @@ const EmailLookup = () => {
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.container}>
-                <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} style={styles.backButton}>
-                    <Icon name="arrow-back" size={30} color="#085bd8"/>
-                </TouchableOpacity>
+                <View style={{marginBottom: 16, gap: 10, marginTop: 20}}>
+                    <TouchableOpacity
+                        disabled={disabled}
+                        activeOpacity={0.8}
+                        onPress={() => router.back()}
+                        style={styles.signUpButtonView}
+                    >
+                        <Icon name="arrow-back" size={30} color="#085bd8"/>
+                    </TouchableOpacity>
+                </View>
                 <Image source={forgot} style={styles.image}/>
                 <View style={{gap: 10}}>
                     <Text style={styles.headerText}>Forgot Password?</Text>
@@ -106,7 +111,6 @@ const EmailLookup = () => {
                         <Text style={styles.resetPasswordText}>Send Instructions</Text>}
                 </TouchableOpacity>
 
-                {/* Render verification modal when in verification step */}
                 {currentFlowStep === ResetFlow.Verification && (
                     <VerificationCodeModal
                         email={email}
@@ -115,7 +119,7 @@ const EmailLookup = () => {
                     />
                 )}
 
-                <Toast position="top"/>
+                <Toast position="top" topOffset={64}/>
             </View>
         </TouchableWithoutFeedback>
     )
@@ -128,6 +132,19 @@ const styles = StyleSheet.create({
         padding: 24,
         width: "100%",
         backgroundColor: "white"
+    },
+    signUpButtonView: {
+        backgroundColor: "#d6e4ff",
+        width: 50,
+        height: 50,
+        borderRadius: 16,
+        justifyContent: "center",
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowOffset: {width: 0, height: 2},
+        shadowRadius: 4,
+        elevation: 3
     },
     image: {
         width: "80%",
@@ -144,13 +161,13 @@ const styles = StyleSheet.create({
     },
     headerText: {
         color: "#073ea0",
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: "500"
     },
     subHeaderText: {
         fontSize: 16,
         fontWeight: "400",
-        color: "gray"
+        color: "#6b7280",
     },
     inputView: {
         marginVertical: 24,
