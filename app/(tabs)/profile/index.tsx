@@ -19,12 +19,12 @@ const Page = () => {
     ]
     const navigation = useNavigation()
     const userInfo = useSelector((state: RootState) => state.userInfo)
+    console.log('User info is', userInfo)
     const dispatch = useDispatch()
     const image = userInfo.picture
-    const fullName = userInfo.name
-    const splitFullName = userInfo.name.split(' ')
-    const firstName = splitFullName[0].charAt(0).toUpperCase(), lastName = splitFullName[1].charAt(0).toUpperCase()
-    const abbrevName = firstName + lastName
+    const fullName = userInfo.name;
+    const splitFullName = fullName.split(' ');
+    const abbrevName = splitFullName[0].charAt(0).toUpperCase() + (splitFullName[1]?.charAt(0).toUpperCase() || '');
     const [viewProfileModal, setViewProfileModal] = useState(false)
     const [showSignOutModal, setShowSignOutModal] = useState(false);
 

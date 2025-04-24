@@ -28,3 +28,14 @@ export type Buttons = {
     name: string,
     navigateTo: string
 }
+export type OauthSignUp = {
+    email?: string | null,
+    name?: string,
+    oauthId?: string,
+    oauthProvider: string,
+    picture?: string,
+    emailVerified?: boolean,
+    authorizationCode?: string | null,
+    accessToken?: string,
+    identityToken?: string | null,
+}

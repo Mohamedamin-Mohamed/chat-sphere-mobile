@@ -1,21 +1,29 @@
 import * as Google from "expo-auth-session/providers/google"
 import * as AppleAuthentication from "expo-apple-authentication"
 
-import {useEffect} from "react"
+import {Dispatch, useEffect} from "react"
 import {router} from "expo-router"
+import oauthSignUp from "../api/oauthSignUp";
+import Toast from "react-native-toast-message";
+import {useDispatch} from "react-redux";
+import {setUserInfo} from "../redux/userSlice";
+import {UnknownAction} from "redux";
+import sanitizeUser from "../utils/sanitizeUser";
+import fetchUserInfo from "../api/fetchUserInfo";
+import {OauthSignUp} from "../types/types";
 
 const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID
-
 export const useGoogleOAuth = () => {
     const [request, response, googlePromptAsync] = Google.useAuthRequest({
         iosClientId: IOS_CLIENT_ID,
     })
+    const dispatch = useDispatch();
 
     useEffect(() => {
         if (response?.type === "success") {
             const {authentication} = response;
             if (authentication) {
-                getUserInfo(authentication.accessToken);
+                getUserInfo(authentication.accessToken, dispatch);
             }
         }
     }, [response]);
@@ -23,17 +31,13 @@ export const useGoogleOAuth = () => {
     return {googlePromptAsync}
 }
 
-export const getUserInfo = async (token: string) => {
+export const getUserInfo = async (token: string, dispatch: Dispatch<UnknownAction>) => {
     if (!token) return
     try {
-        const response = await fetch('https://www.googleapis.com/userinfo/v2/me', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
+        const response = await fetchUserInfo(token)
         const user = await response.json()
 
-        const request = {
+        const request: OauthSignUp = {
             email: user.email,
             oauthId: user.id,
             oauthProvider: 'Google',
@@ -42,17 +46,14 @@ export const getUserInfo = async (token: string) => {
             emailVerified: user.verified_email,
             accessToken: token
         }
+        await handleResponse(request, dispatch)
 
-        router.push({
-            pathname: 'GetStarted',
-            params: request
-        })
     } catch (err) {
-        console.error('Failed to fecth user data:', err)
+        console.error('Failed to fetch user data:', err)
     }
 }
 
-export const signInWithApple = async () => {
+export const signInWithApple = async (dispatch: Dispatch<UnknownAction>) => {
     try {
         const credential = await AppleAuthentication.signInAsync({
             requestedScopes: [
@@ -61,26 +62,40 @@ export const signInWithApple = async () => {
             ]
         })
 
-        const name = credential.fullName?.givenName
-        const request = {
+        const name = (credential.fullName?.givenName || '') + " " + (credential.fullName?.familyName || '');
+        console.log(`Name is ${name} and length is ${name.length}`)
+        const request: OauthSignUp = {
             email: credential.email,
             oauthProvider: 'Apple',
-            name: name,
+            name: name ?? '',
             authorizationCode: credential.authorizationCode,
-            identityToken: credential.identityToken
+            identityToken: credential.identityToken,
+            oauthId: credential.user
         }
 
-        router.push({
-            pathname: 'GetStarted',
-            params: request
-        })
-
-
+        await handleResponse(request, dispatch)
     } catch (e: any) {
         if (e.code === 'ERR_REQUEST_CANCELED') {
-            console.log('Request cancelled')
-        } else {
+            console.error('Request cancelled')
         }
     }
-
 }
+
+const handleResponse = async (request: OauthSignUp, dispatch: Dispatch<UnknownAction>) => {
+    const oauthResponse = await oauthSignUp(request, new AbortController());
+
+    if (!oauthResponse.ok) {
+        const message = await oauthResponse.text()
+        Toast.show({
+            type: 'error',
+            text1: message
+        })
+    } else {
+        const OauthResponse = await oauthResponse.json()
+        const user = OauthResponse.user
+        const sanitizedUser = sanitizeUser(user)
+        dispatch(setUserInfo(sanitizedUser))
+        router.push('chat')
+    }
+}
+

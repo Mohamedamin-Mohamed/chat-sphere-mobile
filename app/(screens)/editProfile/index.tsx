@@ -96,7 +96,6 @@ const Page = () => {
     }
 
     const saveEdits = async () => {
-        // Implement save functionality
         if (!isEmailValid()) {
             setShowEmailNotFoundModal(true);
             return;
@@ -252,6 +251,7 @@ const Page = () => {
     }, [emailInputActive])
 
     const handlePasswordChange = (route: string) => {
+        if (disabled) return
         setNameInput(fullName)
         setEmailInput(email)
         router.push(route)
@@ -353,6 +353,8 @@ const Page = () => {
                     </View>
                     <CampusConnect/>
                     <AccountInfo
+                        userInfo={userInfo}
+                        disabled={disabled}
                         emailInput={emailInput}
                         setEmailInput={setEmailInput}
                         setEmailInputActive={setEmailInputActive}
@@ -386,7 +388,7 @@ const Page = () => {
                     <EmailNotValidModal showModal={showEmailNotFoundModal} discardModal={handleEmailModalClose}/>}
                 {showEmptyNameModal &&
                     <EmptyNameModal showModal={showEmptyNameModal} discardModal={handleNameModalClose}/>}
-                <Toast position='top'/>
+                <Toast />
             </ScrollView>
         </SafeAreaView>
     );
