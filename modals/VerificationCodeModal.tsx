@@ -2,13 +2,10 @@ import {useCallback, useRef, useState} from "react";
 import {Modal, StyleSheet, TextInput, View} from "react-native";
 import Toast from "react-native-toast-message";
 import {router} from "expo-router";
-
 import verifyCode from "../api/verifyCode";
 import emailLookup from "../api/emailLookup";
 import resetPassword from "../api/resetPassword";
-
 import emailValidation from "../utils/emailValidation";
-
 import CodeVerificationUI from "../components/CodeVerificationUI";
 import PasswordResetUI from "../components/PasswordResetUI";
 
@@ -129,7 +126,8 @@ const VerificationCodeModal = ({
             } else {
                 Toast.show({
                     type: 'success',
-                    text1: 'Reset your password',
+                    text1: 'Verified, reset your password',
+                    text2: 'Redirecting',
                     onShow: () => setDisabled(true),
                     onHide: () => {
                         setDisabled(false)
@@ -151,7 +149,6 @@ const VerificationCodeModal = ({
         await handleEmailLookup();
     };
 
-    // Password management
     const handlePasswordChange = (key: string, val: string) => {
         setPasswords((prevState) => ({
             ...prevState,
@@ -211,7 +208,6 @@ const VerificationCodeModal = ({
 
     return (
         <Modal transparent={true} visible={true} animationType="slide">
-            <Toast position="top"/>
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                     {!passwordResetModal ? (
@@ -238,6 +234,7 @@ const VerificationCodeModal = ({
                         />
                     )}
                 </View>
+                <Toast position="top" topOffset={64}/>
             </View>
         </Modal>
     );
