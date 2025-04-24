@@ -96,7 +96,6 @@ const Page = () => {
     }
 
     const saveEdits = async () => {
-        // Implement save functionality
         if (!isEmailValid()) {
             setShowEmailNotFoundModal(true);
             return;
