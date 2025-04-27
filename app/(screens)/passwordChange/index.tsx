@@ -370,12 +370,13 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         position: 'absolute',
+        padding: 10,
         top: 0,
         bottom: 0,
         left: 0,
         right: 0,
         justifyContent: 'center',
-        zIndex: 10, // Make sure it's above everything else
+        zIndex: 10,
     },
 
 });

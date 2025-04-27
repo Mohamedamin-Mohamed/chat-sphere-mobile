@@ -38,6 +38,7 @@ const SignIn = () => {
     const [signInDetails, setSignInDetails] = useState<SignIn>(initialSignInDetails);
     const [err, setErr] = useState<Partial<Error>>({});
     const navigation = useNavigation();
+    const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
     const handleChange = (value: string, index: keyof SignIn) => {
         setSignInDetails(prev => ({...prev, [index]: value}));
@@ -105,6 +106,11 @@ const SignIn = () => {
         router.push("/EmailLookup");
     }
 
+    const handlePasswordVisibility = () => {
+        if (signInDetails.password !== '') {
+            setConfirmPasswordVisible(prev => !prev);
+        }
+    };
     return (
         <ScrollView contentContainerStyle={{flexGrow: 1}}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -135,17 +141,34 @@ const SignIn = () => {
                             style={[styles.input, {marginBottom: err.email ? 0 : 12}]}
                         />
                         {err.email && <Text style={styles.errorMessage}>{err.email}</Text>}
+                        <View>
+                            <TextInput
+                                secureTextEntry={!confirmPasswordVisible}
+                                keyboardType="default"
+                                autoCapitalize="none"
+                                placeholder="password"
+                                placeholderTextColor="#2b2b2b"
+                                value={signInDetails.password}
+                                onChangeText={text => handleChange(text, 'password')}
+                                style={[styles.input, {marginBottom: err.password ? 0 : 12}]}
 
-                        <TextInput
-                            keyboardType="default"
-                            secureTextEntry={true}
-                            autoCapitalize="none"
-                            placeholder="password"
-                            placeholderTextColor="#2b2b2b"
-                            value={signInDetails.password}
-                            onChangeText={text => handleChange(text, 'password')}
-                            style={[styles.input, {marginBottom: err.password ? 0 : 12}]}
-                        />
+                            />
+
+                            {signInDetails.password !== '' && (
+                                <TouchableOpacity
+                                    style={styles.eyeIcon}
+                                    onPress={handlePasswordVisibility}
+                                    disabled={loading}
+                                    activeOpacity={0.9}
+                                >
+                                    <Icon
+                                        name={confirmPasswordVisible ? "visibility" : "visibility-off"}
+                                        size={22}
+                                        color="#085bd8"
+                                    />
+                                </TouchableOpacity>
+                            )}
+                        </View>
                         {err.password && <Text style={styles.errorMessage}>{err.password}</Text>}
 
                         <TouchableOpacity onPress={handleEmailLookup}>
@@ -210,7 +233,12 @@ const styles = StyleSheet.create({
         borderColor: "#cbd5e1",
         padding: 12,
         borderRadius: 8,
-        fontSize: 16
+        fontSize: 16,
+    },
+    eyeIcon: {
+        position: "absolute",
+        right: 15,
+        top: 12,
     },
     title: {
         marginBottom: 12,

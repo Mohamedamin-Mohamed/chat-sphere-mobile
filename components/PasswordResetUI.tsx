@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
@@ -21,6 +21,9 @@ const PasswordResetUI: React.FC<PasswordResetUIProps> = ({
                                                              handleResetPassword,
                                                              onCancel
                                                          }) => {
+    const [passwordVisible, setPasswordVisible] = useState(false);
+    const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+
     return (
         <>
             <Icon name="close" size={26} style={styles.closeIcon} disabled={disabled} onPress={onCancel}/>
@@ -28,29 +31,55 @@ const PasswordResetUI: React.FC<PasswordResetUIProps> = ({
             <Text style={styles.passwordResetHeaderText}>Reset Password</Text>
 
             <View style={styles.passwordFormContainer}>
-                <TextInput
-                    keyboardType="default"
-                    secureTextEntry={true}
-                    autoCapitalize="none"
-                    autoComplete="off"
-                    autoCorrect={false}
-                    placeholder="Password"
-                    placeholderTextColor="#2b2b2b"
-                    onChangeText={(text) => handlePasswordChange("password", text)}
-                    style={styles.input}
-                />
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        keyboardType="default"
+                        secureTextEntry={!passwordVisible}
+                        autoCapitalize="none"
+                        autoComplete="off"
+                        autoCorrect={false}
+                        placeholder="Password"
+                        placeholderTextColor="#2b2b2b"
+                        onChangeText={(text) => handlePasswordChange("password", text)}
+                        style={styles.input}
+                    />
+                    <TouchableOpacity
+                        style={styles.eyeIcon}
+                        onPress={() => setPasswordVisible(prev => !prev)}
+                        disabled={disabled}
+                    >
+                        <Icon
+                            name={passwordVisible ? "visibility" : "visibility-off"}
+                            size={22}
+                            color="#085bd8"
+                        />
+                    </TouchableOpacity>
+                </View>
 
-                <TextInput
-                    keyboardType="default"
-                    secureTextEntry={true}
-                    autoCapitalize="none"
-                    autoComplete="off"
-                    autoCorrect={false}
-                    placeholder="Confirm Password"
-                    placeholderTextColor="#2b2b2b"
-                    onChangeText={(text) => handlePasswordChange("confirmPassword", text)}
-                    style={styles.input}
-                />
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        keyboardType="default"
+                        secureTextEntry={!confirmPasswordVisible}
+                        autoCapitalize="none"
+                        autoComplete="off"
+                        autoCorrect={false}
+                        placeholder="Confirm Password"
+                        placeholderTextColor="#2b2b2b"
+                        onChangeText={(text) => handlePasswordChange("confirmPassword", text)}
+                        style={styles.input}
+                    />
+                    <TouchableOpacity
+                        style={styles.eyeIcon}
+                        onPress={() => setConfirmPasswordVisible(prev => !prev)}
+                        disabled={disabled}
+                    >
+                        <Icon
+                            name={confirmPasswordVisible ? "visibility" : "visibility-off"}
+                            size={22}
+                            color="#085bd8"
+                        />
+                    </TouchableOpacity>
+                </View>
 
                 {passwordError ? <Text style={styles.passwordResetErrorText}>{passwordError}</Text> : null}
 
@@ -78,19 +107,32 @@ const styles = StyleSheet.create({
         width: "80%",
         height: 200,
         resizeMode: "contain",
-        alignSelf: "center"
+        alignSelf: "center",
     },
     passwordFormContainer: {
         marginTop: 10,
-        gap: 16
+        gap: 16,
+        paddingBottom: 20,
+    },
+    inputContainer: {
+        position: "relative",
+        width: "100%",
     },
     input: {
         borderWidth: 1,
-        borderColor: "gray",
-        padding: 10,
-        borderRadius: 8,
+        borderColor: "#E5E9F2",
+        backgroundColor: "#F8F9FC",
+        padding: 15,
+        paddingRight: 50,
+        borderRadius: 12,
         width: "100%",
         fontSize: 16,
+        color: "#333",
+    },
+    eyeIcon: {
+        position: "absolute",
+        right: 15,
+        top: 12,
     },
     passwordResetHeaderText: {
         fontSize: 24,

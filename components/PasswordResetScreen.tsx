@@ -37,16 +37,30 @@ const PasswordResetScreen = ({
 
 const styles = StyleSheet.create({
     container: {
+        marginTop: 30,
         flex: 1,
         backgroundColor: "#fff",
         justifyContent: "center",
         alignItems: "center",
-        paddingHorizontal: 20
+        paddingHorizontal: 20,
     },
     innerWrapper: {
-        width: "100%",
+        backgroundColor: 'white',
+        marginTop: 120,
+        width: '96%',
         maxWidth: 400,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 10,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
 });
+
+
 
 export default PasswordResetScreen;

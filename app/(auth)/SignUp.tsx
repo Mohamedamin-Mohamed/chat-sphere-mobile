@@ -28,6 +28,7 @@ const SignUp = () => {
 
     const [disabled, setDisabled] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
     const [signUpDetails, setSignUpDetails] = useState<UserSignUp>({
         email: "",
         name: "",
@@ -39,6 +40,7 @@ const SignUp = () => {
             ...prevState,
             [index]: value
         }))
+        if (signUpDetails.password === '') setConfirmPasswordVisible(false)
     }
 
     const isEmailValid = (email: string) => emailValidation(email);
@@ -123,6 +125,13 @@ const SignUp = () => {
         }
     )
 
+    const handlePasswordVisibility = () => {
+        if (signUpDetails.password !== '') {
+            setConfirmPasswordVisible(prev => !prev);
+        }
+    };
+
+
     return (
         <ScrollView contentContainerStyle={{flex: 1}}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -165,21 +174,37 @@ const SignUp = () => {
                             style={styles.input}
                             autoCapitalize="none"
                         />
+                        <View>
+                            <TextInput
+                                secureTextEntry={!confirmPasswordVisible}
+                                editable={!disabled}
+                                keyboardType="visible-password"
+                                placeholder="password"
+                                placeholderTextColor="#2b2b2b"
+                                autoCapitalize="none"
+                                style={styles.input}
+                                onChangeText={(text) => handleChange(text, "password")}
+                                value={signUpDetails.password}
+                                textContentType="none"
+                                autoComplete="off"
+                                autoCorrect={false}
+                            />
 
-                        <TextInput
-                            editable={!disabled}
-                            keyboardType="visible-password"
-                            secureTextEntry={true}
-                            placeholder="password"
-                            placeholderTextColor="#2b2b2b"
-                            autoCapitalize="none"
-                            style={styles.input}
-                            onChangeText={(text) => handleChange(text, "password")}
-                            value={signUpDetails.password}
-                            textContentType="none"
-                            autoComplete="off"
-                            autoCorrect={false}
-                        />
+                            {signUpDetails.password !== '' && (
+                                <TouchableOpacity
+                                    style={styles.eyeIcon}
+                                    onPress={handlePasswordVisibility}
+                                    disabled={disabled}
+                                    activeOpacity={0.9}
+                                >
+                                    <Icon
+                                        name={confirmPasswordVisible ? "visibility" : "visibility-off"}
+                                        size={22}
+                                        color="#085bd8"
+                                    />
+                                </TouchableOpacity>
+                            )}
+                        </View>
 
                         <TouchableOpacity
                             disabled={disabled}
@@ -266,6 +291,11 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         fontSize: 16,
         backgroundColor: "#f9fafb"
+    },
+    eyeIcon: {
+        position: "absolute",
+        right: 15,
+        top: 12,
     },
     errorMessage: {
         fontSize: 18,
