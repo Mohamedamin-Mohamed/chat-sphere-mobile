@@ -3,7 +3,7 @@ interface SignIn {
     password: string,
 }
 
-const signIn = async (signInRequest: SignIn, controller: AbortController)=>{
+const signIn = async (signInRequest: SignIn, controller: AbortController) => {
     const url = process.env.EXPO_PUBLIC_BACKEND_URL
 
     return await fetch(`${url}/auth/signin/email`, {
