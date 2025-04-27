@@ -1,8 +1,11 @@
 import {RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import IconMaterial from "react-native-vector-icons/MaterialCommunityIcons";
+import Icon from "react-native-vector-icons/MaterialIcons"
 import {useState} from "react";
 import CampusConnectModal from "../../../modals/CampusConnectModal";
+import askChatGPT from "../../../api/askChatGPT";
+import {router} from "expo-router";
 
 const Page = () => {
     const [refreshing, setRefreshing] = useState(false)
@@ -17,6 +20,13 @@ const Page = () => {
             setRefreshing(false)
         }, 2000)
     }
+
+    const handlePressing = async () => {
+        const response = await askChatGPT('Yesterday date?')
+        const data = await response.json()
+        console.log(data)
+        console.log(data.choices[0].message.content)
+    }
     return (
         <SafeAreaView style={{flex: 1}}>
             <ScrollView contentContainerStyle={{flexGrow: 1}}
@@ -24,9 +34,8 @@ const Page = () => {
                 <View style={styles.buttonsView}>
                     <Text style={styles.chatText}>Chat</Text>
                     <View style={styles.sideView}>
-                        <TouchableOpacity style={styles.buttons} activeOpacity={0.8}>
+                        <TouchableOpacity style={styles.buttons} activeOpacity={0.8} onPress={handlePressing}>
                             <MaterialCommunityIcons name="qrcode" size={30}/>
-
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.buttons} activeOpacity={0.8}>
                             <Icon name="add" size={30} color="gray"/>
@@ -56,6 +65,8 @@ const Page = () => {
                             <Text style={styles.exploreText}>Find groups, classmates, etc at your school</Text>
                         </TouchableOpacity>
                     </View>
+                    <IconMaterial name='robot' size={30} onPress={() => router.push('chatbot')}
+                          style={styles.chatbotButton}/>
                 </View>
                 {campusConnectModal && <CampusConnectModal campusConnectModal={campusConnectModal}
                                                            handleCampusConnectModal={handleCampusConnectModal}/>}
@@ -129,6 +140,11 @@ const styles = StyleSheet.create({
     exploreText: {
         paddingTop: 6,
         fontWeight: '300'
+    },
+    chatbotButton: {
+        marginLeft: 'auto',
+        marginTop: 'auto',
+        marginRight: 20
     },
     parentView: {
         gap: 10,
