@@ -63,7 +63,7 @@ export const signInWithApple = async (dispatch: Dispatch<UnknownAction>) => {
         })
 
         const name = (credential.fullName?.givenName || '') + " " + (credential.fullName?.familyName || '');
-        console.log(`Name is ${name} and length is ${name.length}`)
+        console.log('Credential is ', credential)
         const request: OauthSignUp = {
             email: credential.email,
             oauthProvider: 'Apple',
