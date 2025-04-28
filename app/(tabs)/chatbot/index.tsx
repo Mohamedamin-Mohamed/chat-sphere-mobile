@@ -2,6 +2,7 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
+    RefreshControl,
     SafeAreaView,
     ScrollView,
     StyleSheet,
@@ -10,7 +11,6 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import {router} from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import React, {useEffect, useRef, useState} from "react";
 import {useSelector} from "react-redux";
@@ -39,40 +39,32 @@ const Index = () => {
         const userMessage = {sender: 'user', message: message.trim(), timestamp: date};
         const currentMsg = message;
 
-        // Clear the message immediately
         setMessage('');
 
         try {
-            // Add user's message to conversation
             setConversation(prevState => [...prevState, userMessage]);
 
-            // Scroll to bottom after adding user message
             setTimeout(() => {
                 scrollViewRef.current?.scrollToEnd({animated: true});
             }, 100);
 
-            // Show typing indicator
             setShowTypingIndicator(true);
             setTimeout(() => {
                 scrollViewRef.current?.scrollToEnd({animated: true});
             }, 100);
 
-            // Fetch GPT's response
             const response = await askChatGPT(currentMsg);
             const data = await response.json();
             const gptMessageContent = data.choices[0].message.content;
 
-            // Hide typing indicator and add GPT's message
             setShowTypingIndicator(false);
             const gptMessage = {sender: 'gpt', message: gptMessageContent, timestamp: new Date()};
             setConversation(prevState => [...prevState, gptMessage]);
 
-            // Scroll to bottom after adding GPT message
             setTimeout(() => {
                 scrollViewRef.current?.scrollToEnd({animated: true});
             }, 100);
 
-            // Save user's and GPT's message in parallel
             const [userResponse, gptResponse] = await Promise.all([
                 saveMessage({...userMessage, email: email}, new AbortController()),
                 saveMessage({...gptMessage, email: email}, new AbortController())
@@ -102,45 +94,42 @@ const Index = () => {
     }
 
 
-    useEffect(() => {
-        const getMessages = async () => {
-            try {
-                setInitialLoading(true);
-                const response = await loadMessages(new AbortController());
-                if (response.ok) {
-                    const messages = await response.json();
+    const getMessages = async () => {
+        try {
+            setInitialLoading(true);
+            const response = await loadMessages(new AbortController());
+            if (response.ok) {
+                const messages = await response.json();
 
-                    // Ensure proper message order by timestamp
-                    const sortedMessages = [...messages].sort((a, b) => {
-                        return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
-                    });
+                const sortedMessages = [...messages].sort((a, b) => {
+                    return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+                });
 
-                    // Fix message order by ensuring user/gpt alternation
-                    const fixedOrderMessages = ensureProperMessageOrder(sortedMessages);
+                const fixedOrderMessages = ensureProperMessageOrder(sortedMessages);
 
-                    setConversation(fixedOrderMessages);
+                setConversation(fixedOrderMessages);
 
-                    // Scroll to bottom after loading initial messages
-                    setTimeout(() => {
-                        scrollViewRef.current?.scrollToEnd({animated: false});
-                    }, 500);
-                } else {
-                    Toast.show({
-                        type: 'error',
-                        text1: 'Error',
-                        text2: 'Failed to load messages',
-                    });
-                }
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setInitialLoading(false);
+                setTimeout(() => {
+                    scrollViewRef.current?.scrollToEnd({animated: false});
+                }, 500);
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'Failed to load messages',
+                });
             }
-        };
-        getMessages().catch(err => console.error(err));
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setInitialLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        getMessages().catch(err => console.error(err))
     }, []);
 
-    // Ensure that we have proper user-gpt alternation in the messages
     const ensureProperMessageOrder = (messages: Conversation[]): Conversation[] => {
         const result: Conversation[] = [];
         let lastSender: string | null = null;
@@ -193,7 +182,6 @@ const Index = () => {
         }
     };
 
-    // Group messages by date
     const groupedMessages = conversation.reduce((groups: Record<string, Conversation[]>, message: Conversation) => {
         const date = formatDate(new Date(message.timestamp));
         if (!groups[date]) {
@@ -203,19 +191,16 @@ const Index = () => {
         return groups;
     }, {});
 
-    // Get sorted dates
     const sortedDates = Object.keys(groupedMessages).sort((a, b) => {
         const dateA = new Date(groupedMessages[a][0].timestamp);
         const dateB = new Date(groupedMessages[b][0].timestamp);
         return dateA.getTime() - dateB.getTime();
     });
 
-    // Process messages to ensure user-gpt alternation within each day
     sortedDates.forEach(date => {
         groupedMessages[date] = ensureProperMessageOrder(groupedMessages[date]);
     });
 
-    // Typing indicator component
     const TypingIndicator = () => (
         <View>
             <Text style={styles.gptLabel}>AI Co-Pilot</Text>
@@ -238,8 +223,8 @@ const Index = () => {
         </View>
     )
 
-    const handleEnterPress = async (event: { key: string }) => {
-        if (event.key === 'Enter' && message !== '') {
+    const handleEnterPress = async (nativeEvent: { key: string }) => {
+        if (nativeEvent.key === 'Enter' && message !== '') {
             await handleSend()
             setMessage('')
         }
@@ -248,14 +233,7 @@ const Index = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => router.back()}
-                    style={styles.backButton}
-                >
-                    <Icon name="arrow-back" size={24} color="white"/>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>AI Co-Pilot</Text>
+                <Text style={styles.headerTitle}>AI Assistant</Text>
             </View>
 
             <KeyboardAvoidingView
@@ -270,6 +248,7 @@ const Index = () => {
                     </View>
                 ) : (
                     <ScrollView
+                        refreshControl={<RefreshControl refreshing={initialLoading} onRefresh={getMessages}/>}
                         ref={scrollViewRef}
                         contentContainerStyle={styles.scrollContainer}
                         showsVerticalScrollIndicator={false}
@@ -300,7 +279,7 @@ const Index = () => {
                                                 {(!isPreviousSameSender) && (
                                                     <Text
                                                         style={msg.sender === "user" ? styles.userLabel : styles.gptLabel}>
-                                                        {msg.sender === "user" ? "You" : "AI Co-Pilot"}
+                                                        {msg.sender === "user" ? "You" : "AI Assistant"}
                                                     </Text>
                                                 )}
 
@@ -322,7 +301,6 @@ const Index = () => {
                             ))
                         )}
 
-                        {/* Typing indicator - ALWAYS appears after user message */}
                         {showTypingIndicator && <TypingIndicator/>}
                     </ScrollView>
                 )}
@@ -369,15 +347,6 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: "#F1F5F9",
-    },
-    backButton: {
-        backgroundColor: "#0f172a",
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        justifyContent: "center",
-        alignItems: "center",
-        marginRight: 12,
     },
     headerTitle: {
         fontSize: 20,
@@ -520,7 +489,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#F1F5F9",
         borderRadius: 20,
         paddingHorizontal: 16,
-        paddingVertical: 10,
+        paddingVertical: 14,
         paddingRight: 40,
         maxHeight: 120,
     },
