@@ -29,7 +29,11 @@ const DrawerLayout = () => {
                         iconName = 'person';
                     } else if (route.name === 'chat') {
                         iconName = 'forum';
-                    } else {
+                    }
+                    else if(route.name === 'chatbot'){
+                        iconName = 'assistant'
+                    }
+                    else {
                         iconName = 'explore';
                     }
 
@@ -38,6 +42,7 @@ const DrawerLayout = () => {
             })}
         >
             <Tabs.Screen name="chat"/>
+            <Tabs.Screen name="chatbot" />
             <Tabs.Screen name="discover"/>
             <Tabs.Screen name="profile"/>
         </Tabs>

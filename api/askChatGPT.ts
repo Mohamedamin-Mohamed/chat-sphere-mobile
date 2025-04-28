@@ -2,8 +2,15 @@ const askChatGPT = async (question: string) => {
     const url = process.env.EXPO_PUBLIC_CHATGPT_CHAT_URL
     const apiKey = process.env.EXPO_PUBLIC_OPENAI_APIKEY
 
+    const dateInfo = process.env.EXPO_PUBLIC_DATE_INFO
+    const chatSphereBio = process.env.EXPO_PUBLIC_CHATSPHERE_BIO
+
     const messages = [
-        {role: 'system', content: `Today is ${new Date().toLocaleDateString('en-US', {dateStyle: 'full'})}.`},
+        {role: 'system', content: dateInfo},
+        {
+            role: 'system',
+            content: chatSphereBio
+        },
         {role: 'user', content: question}
     ]
 
@@ -16,7 +23,7 @@ const askChatGPT = async (question: string) => {
         body: JSON.stringify({
             'model': 'gpt-3.5-turbo',
             messages: messages,
-            'max_tokens': 20
+            'max_tokens': 50
         })
     })
 }
