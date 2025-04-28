@@ -39,10 +39,12 @@ export type OauthSignUp = {
     accessToken?: string,
     identityToken?: string | null,
 }
+
 export interface Conversation {
+    messageId?: string,
     sender: string,
     message: string,
-    date: Date
+    timestamp: Date
 }
 export interface Message extends Conversation {
     email: string
