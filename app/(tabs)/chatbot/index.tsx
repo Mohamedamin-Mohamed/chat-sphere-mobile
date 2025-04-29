@@ -55,6 +55,20 @@ const Index = () => {
 
             const response = await askChatGPT(currentMsg);
             const data = await response.json();
+            if (!response.ok) {
+                const splitMessage = data.error.message.split(' ')
+                const message = splitMessage.slice(0, 3).join(' ')
+
+                console.log('Response not ok, ', message)
+                setShowTypingIndicator(false)
+                Toast.show({
+                    type: 'error',
+                    text1: message,
+                    onShow: () => setDisabled(true),
+                    onHide: () => setDisabled(false)
+                })
+                return
+            }
             const gptMessageContent = data.choices[0].message.content;
 
             setShowTypingIndicator(false);
@@ -69,7 +83,6 @@ const Index = () => {
                 saveMessage({...userMessage, email: email}, new AbortController()),
                 saveMessage({...gptMessage, email: email}, new AbortController())
             ]);
-
             if (!userResponse.ok || !gptResponse.ok) {
                 const responseJson = userResponse.ok ? await gptResponse.json() : await userResponse.json();
                 const errorMessage = responseJson.message;
@@ -97,7 +110,7 @@ const Index = () => {
     const getMessages = async () => {
         try {
             setInitialLoading(true);
-            const response = await loadMessages(new AbortController());
+            const response = await loadMessages(email, new AbortController());
             if (response.ok) {
                 const messages = await response.json();
 
@@ -105,7 +118,7 @@ const Index = () => {
                     return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
                 });
 
-                const fixedOrderMessages = ensureProperMessageOrder(sortedMessages);
+                const fixedOrderMessages = await ensureProperMessageOrder(sortedMessages);
 
                 setConversation(fixedOrderMessages);
 
@@ -130,7 +143,7 @@ const Index = () => {
         getMessages().catch(err => console.error(err))
     }, []);
 
-    const ensureProperMessageOrder = (messages: Conversation[]): Conversation[] => {
+    const ensureProperMessageOrder = async (messages: Conversation[]): Promise<Conversation[]> => {
         const result: Conversation[] = [];
         let lastSender: string | null = null;
 
@@ -152,6 +165,11 @@ const Index = () => {
                     message: '[No response was provided]',
                     timestamp: placeholderTimestamp
                 };
+                try {
+                    await saveMessage({...placeholderMessage, email: email}, new AbortController())
+                } catch (exp) {
+                    console.error(exp)
+                }
                 result.push(placeholderMessage);
                 result.push(message);
             } else {
@@ -197,9 +215,6 @@ const Index = () => {
         return dateA.getTime() - dateB.getTime();
     });
 
-    sortedDates.forEach(date => {
-        groupedMessages[date] = ensureProperMessageOrder(groupedMessages[date]);
-    });
 
     const TypingIndicator = () => (
         <View>
@@ -315,6 +330,7 @@ const Index = () => {
                         multiline
                         maxLength={1000}
                         onKeyPress={({nativeEvent}) => handleEnterPress(nativeEvent)}
+                        editable={!disabled}
                     />
                     <TouchableOpacity
                         style={[
@@ -328,6 +344,7 @@ const Index = () => {
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
+            <Toast topOffset={64}/>
         </SafeAreaView>
     );
 };

@@ -3,7 +3,7 @@ const askChatGPT = async (question: string) => {
     const apiKey = process.env.EXPO_PUBLIC_OPENAI_APIKEY
 
     const dateInfo = process.env.EXPO_PUBLIC_DATE_INFO
-    const chatSphereBio = process.env.EXPO_PUBLIC_CHATSPHERE_BIO
+    const chatSphereBio = `Today is ${new Date().toLocaleDateString('en-US', { dateStyle: 'full' })}.`
 
     const messages = [
         {role: 'system', content: dateInfo},
