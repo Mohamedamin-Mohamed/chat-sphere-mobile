@@ -1,6 +1,6 @@
 import {Conversation, EmbeddingType} from "../types/types";
 
-const askChatGPT = async (request: EmbeddingType[], question: string, lastQuestions: Conversation[]) => {
+const askChatGPT = async (request: EmbeddingType[], question: string, lastQuestions: Conversation[], controller: AbortController) => {
     lastQuestions.sort((a, b) => {
         return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     })
@@ -43,7 +43,8 @@ const askChatGPT = async (request: EmbeddingType[], question: string, lastQuesti
             'model': 'gpt-3.5-turbo',
             messages: messages,
             'max_tokens': 50
-        })
+        }),
+        signal: controller.signal
     })
 }
 
