@@ -14,12 +14,14 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import React, {useEffect, useRef, useState} from "react";
 import {useSelector} from "react-redux";
-import {Conversation, RootState} from "../../../types/types";
+import {Conversation, EmbeddingType, RootState} from "../../../types/types";
 import askChatGPT from "../../../api/askChatGPT";
 import saveMessage from "../../../api/saveMessage";
 import Toast from "react-native-toast-message";
 import loadMessages from "../../../api/loadMessages";
 import {format} from "date-fns";
+import createEmbedding from "../../../api/createEmbedding";
+import searchEmbeddings from "../../../api/searchEmbeddings";
 
 const Index = () => {
     const [message, setMessage] = useState("");
@@ -36,14 +38,29 @@ const Index = () => {
         if (message === '') return;
 
         const date = new Date();
-        const userMessage = {sender: 'user', message: message.trim(), timestamp: date};
+        const userQuestion = {sender: 'user', message: message.trim(), timestamp: date};
         const currentMsg = message;
 
         setMessage('');
 
         try {
-            setConversation(prevState => [...prevState, userMessage]);
+            setConversation(prevState => [...prevState, userQuestion]);
+            /**so now embed the users current message, and this embedding will be used to retrieve the top-k most
+             * semantically similar questions and answers pairs. A prompt should be built combining top-k retrieved
+             * Q&A pairs (context) and the users question, which will be sent to the LLM to have relevant context to
+             * give better answer.
+             */
 
+            const request = {question: userQuestion.message}
+            const searchEmbeddingResponse = await searchEmbeddings(request, new AbortController());
+
+            let tempRequest: EmbeddingType[] = []
+            if (searchEmbeddingResponse.ok) {
+                tempRequest = await searchEmbeddingResponse.json()
+            } else {
+                const message = await searchEmbeddingResponse.text()
+                showToastMessage(false, message)
+            }
             setTimeout(() => {
                 scrollViewRef.current?.scrollToEnd({animated: true});
             }, 100);
@@ -53,23 +70,36 @@ const Index = () => {
                 scrollViewRef.current?.scrollToEnd({animated: true});
             }, 100);
 
-            const response = await askChatGPT(currentMsg);
+            const lastTwoQuestions = conversation.slice(-4)
+
+            const response = await askChatGPT(tempRequest, currentMsg, lastTwoQuestions, new AbortController());
             const data = await response.json();
-            if (!response.ok) {
+
+            if (response.status === 500) {
                 const splitMessage = data.error.message.split(' ')
                 const message = splitMessage.slice(0, 3).join(' ')
 
-                console.log('Response not ok, ', message)
                 setShowTypingIndicator(false)
-                Toast.show({
-                    type: 'error',
-                    text1: message,
-                    onShow: () => setDisabled(true),
-                    onHide: () => setDisabled(false)
-                })
+                showToastMessage(false, message)
                 return
             }
             const gptMessageContent = data.choices[0].message.content;
+
+            const embeddingsRequest = {
+                question: userQuestion.message,
+                answer: gptMessageContent,
+                timestamp: date
+            }
+            /**
+             * Here we send a request to create an embedding of the users question, and both the question and answer pair
+             * will be stored in OpenSearch as a vector store.
+             */
+
+            const embeddingResponse = await createEmbedding(embeddingsRequest, new AbortController())
+            if (response.status === 500) {
+                const message = await embeddingResponse.text()
+                showToastMessage(false, message)
+            }
 
             setShowTypingIndicator(false);
             const gptMessage = {sender: 'gpt', message: gptMessageContent, timestamp: new Date()};
@@ -80,33 +110,31 @@ const Index = () => {
             }, 100);
 
             const [userResponse, gptResponse] = await Promise.all([
-                saveMessage({...userMessage, email: email}, new AbortController()),
+                saveMessage({...userQuestion, email: email}, new AbortController()),
                 saveMessage({...gptMessage, email: email}, new AbortController())
-            ]);
+            ])
+
             if (!userResponse.ok || !gptResponse.ok) {
                 const responseJson = userResponse.ok ? await gptResponse.json() : await userResponse.json();
                 const errorMessage = responseJson.message;
 
-                Toast.show({
-                    type: 'error',
-                    text1: 'Error occurred',
-                    text2: errorMessage,
-                    onShow: () => setDisabled(true),
-                    onHide: () => setDisabled(false)
-                });
+                showToastMessage(false, errorMessage, 'Error occurred')
             }
         } catch (exp: any) {
             console.error(exp);
             setShowTypingIndicator(false);
-            Toast.show({
-                type: 'error',
-                text1: 'Error',
-                text2: 'Failed to send message. Please try again.',
-            });
+            showToastMessage(false, 'Failed to send request. Please try again.', 'Error')
         }
     }
 
-
+    const showToastMessage = (success: boolean, message: string, header?: string) => {
+        Toast.show({
+            type: success ? 'success' : 'error',
+            ...(header ? {tex1: header, text2: message} : {tex1: message}),
+            onShow: () => setDisabled(true),
+            onHide: () => setDisabled(false)
+        })
+    }
     const getMessages = async () => {
         try {
             setInitialLoading(true);
@@ -124,13 +152,9 @@ const Index = () => {
 
                 setTimeout(() => {
                     scrollViewRef.current?.scrollToEnd({animated: false});
-                }, 500);
+                }, 500)
             } else {
-                Toast.show({
-                    type: 'error',
-                    text1: 'Error',
-                    text2: 'Failed to load messages',
-                });
+                showToastMessage(false, 'Failed to load messages', 'Error')
             }
         } catch (error) {
             console.error(error);
@@ -141,7 +165,7 @@ const Index = () => {
 
     useEffect(() => {
         getMessages().catch(err => console.error(err))
-    }, []);
+    }, [])
 
     const ensureProperMessageOrder = async (messages: Conversation[]): Promise<Conversation[]> => {
         const result: Conversation[] = [];
