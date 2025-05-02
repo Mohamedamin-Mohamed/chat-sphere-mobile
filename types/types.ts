@@ -49,3 +49,9 @@ export interface Conversation {
 export interface Message extends Conversation {
     email: string
 }
+
+export type EmbeddingType = {
+    question: string,
+    answer: string,
+    timestamp: string
+}
