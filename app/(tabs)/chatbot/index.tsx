@@ -45,7 +45,7 @@ const Index = () => {
 
         try {
             setConversation(prevState => [...prevState, userQuestion]);
-            /**so now embed the users current message, and this embedding will be used to retrieve the top-k most
+            /**So create an embedding of the users current message, and this embedding will be used to retrieve the top-k most
              * semantically similar questions and answers pairs. A prompt should be built combining top-k retrieved
              * Q&A pairs (context) and the users question, which will be sent to the LLM to have relevant context to
              * give better answer.
@@ -70,12 +70,16 @@ const Index = () => {
                 scrollViewRef.current?.scrollToEnd({animated: true});
             }, 100);
 
-            const lastTwoQuestions = conversation.slice(-4)
+            const lastFourConversation = conversation.slice(-4)
 
-            const response = await askChatGPT(tempRequest, currentMsg, lastTwoQuestions, new AbortController());
+            const response = await askChatGPT(tempRequest, currentMsg, lastFourConversation, new AbortController());
             const data = await response.json();
 
-            if (response.status === 500) {
+            if (response.status === 400) {
+                const text = await response.text()
+                showToastMessage(false, text);
+                return
+            } else if (response.status === 500) {
                 const splitMessage = data.error.message.split(' ')
                 const message = splitMessage.slice(0, 3).join(' ')
 
