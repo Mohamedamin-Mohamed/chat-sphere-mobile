@@ -1,21 +1,13 @@
-interface UpdateProfileType {
-    email: string,
-    newEmail?: string,
-    name?: string,
-    bio?: string,
-    profileImage?: string | null,
-    phoneNumber: string
-}
+import {UpdateProfileType} from "../types/types";
+import createUploadFormData from "../utils/createUploadFormData";
+
 
 const updateProfile = async (request: UpdateProfileType, controller: AbortController) => {
     const url = process.env.EXPO_PUBLIC_BACKEND_URL
-
+    const formData = createUploadFormData(request)
     return await fetch(`${url}/api/profile/update`, {
         method: 'POST',
-        headers: {
-            'Content-type': 'application/json'
-        },
-        body: JSON.stringify(request),
+        body: formData,
         signal: controller.signal
     })
 }
