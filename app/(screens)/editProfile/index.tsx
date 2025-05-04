@@ -13,7 +13,7 @@ import {
 import {router, useNavigation} from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {useDispatch, useSelector} from "react-redux";
-import {RootState} from "../../../types/types";
+import {ProfilePictureDetails, RootState} from "../../../types/types";
 import React, {useEffect, useState} from "react";
 import * as ImagePicker from "expo-image-picker";
 import AvatarModal from "../../../modals/AvatarModal";
@@ -42,7 +42,10 @@ const Page = () => {
     const abbrevName = splitFullName[0].charAt(0).toUpperCase() + (splitFullName[1]?.charAt(0).toUpperCase() || '');
 
     const [displayAvatarModal, setDisplayAvatarModal] = useState(false);
-    const [image, setImage] = useState(picture);
+    const [profilePictureDetails, setProfilePictureDetails] = useState<ProfilePictureDetails>({
+        fileName: '', file: {uri: picture, mimeType: '', fileSize: 0}
+    })
+
     const [viewProfileModal, setViewProfileModal] = useState(false);
     const [nameInput, setNameInput] = useState<string>(fullName);
     const [emailInput, setEmailInput] = useState<string>(email)
@@ -76,12 +79,23 @@ const Page = () => {
                             aspect: [4, 3],
                             quality: 1,
                         });
-
-                        if (!result.canceled) {
-                            setImage(result.assets[0].uri);
+                        if (!result.canceled && result.assets && result.assets.length > 0) {
+                            const asset = result.assets[0];
+                            const {uri, mimeType, fileSize} = asset;
+                            let fileName = asset.fileName;
+                            if (!fileName && uri) {
+                                fileName = uri.split('/').pop() || `image.${mimeType?.split('/')[1] || 'jpg'}`;
+                            }
+                            if (fileName && uri && mimeType && fileSize) {
+                                setProfilePictureDetails(prevState => ({
+                                    ...prevState,
+                                    fileName,
+                                    file: {uri, mimeType, fileSize}
+                                }));
+                            }
                         }
-                    },
-                },
+                    }
+                }
             ]
         );
     };
@@ -107,17 +121,17 @@ const Page = () => {
 
         const emailUpdated = emailInput !== email;
         const nameUpdated = nameInput.trim() !== fullName;
-        const imageUpdated = image !== picture;
+        const imageUpdated = profilePictureDetails.file.uri !== picture;
         const bioUpdated = bio !== userBio
 
         const request = {
             email: email,
             ...(emailUpdated && {newEmail: emailInput}),
             ...(nameUpdated && {name: nameInput}),
-            ...(imageUpdated && {profileImage: image}),
+            ...(imageUpdated && {profilePictureDetails: profilePictureDetails}),
             ...(bioUpdated && {bio}),
             phoneNumber: phoneNumber
-        };
+        }
 
         try {
             setLoading(true)
@@ -164,21 +178,21 @@ const Page = () => {
 
     const preventScreenRemoval =
         !hasSaved && (
-            image !== picture ||
+            profilePictureDetails.file.uri !== picture ||
             fullName.trim() !== nameInput ||
             emailInput.trim() !== email ||
             bio.trim() !== userBio
         )
 
     useEffect(() => {
-        const somethingChanged = image !== picture || fullName !== nameInput || emailInput !== email || bio.trim() !== userBio
+        const somethingChanged = profilePictureDetails.file.uri !== picture || fullName !== nameInput || emailInput !== email || bio.trim() !== userBio
 
         if (somethingChanged) {
             setShowSaveButton(true);
         } else {
             setShowSaveButton(false);
         }
-    }, [nameInput, emailInput, image, bio]);
+    }, [nameInput, emailInput, profilePictureDetails.file.uri, bio]);
 
 
     usePreventRemove(preventScreenRemoval, ({data}) => {
@@ -282,8 +296,8 @@ const Page = () => {
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <View style={styles.childContainer}>
                     <View style={styles.nameAbbrevView}>
-                        {image ? (
-                            <Image source={{uri: image}} style={styles.avatarImage}/>
+                        {profilePictureDetails.file.uri ? (
+                            <Image source={{uri: profilePictureDetails.file.uri}} style={styles.avatarImage}/>
                         ) : (
                             <Text style={styles.abbrevText}>{abbrevName}</Text>
                         )}
@@ -371,7 +385,7 @@ const Page = () => {
                 )}
                 {viewProfileModal && (
                     <ViewProfileModal
-                        image={image}
+                        image={profilePictureDetails.file.uri}
                         setViewProfileModal={setViewProfileModal}
                         fullName={fullName}
                         abbrevName={abbrevName}
@@ -388,7 +402,7 @@ const Page = () => {
                     <EmailNotValidModal showModal={showEmailNotFoundModal} discardModal={handleEmailModalClose}/>}
                 {showEmptyNameModal &&
                     <EmptyNameModal showModal={showEmptyNameModal} discardModal={handleNameModalClose}/>}
-                <Toast />
+                <Toast/>
             </ScrollView>
         </SafeAreaView>
     );
