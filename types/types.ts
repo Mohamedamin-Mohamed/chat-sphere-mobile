@@ -46,6 +46,7 @@ export interface Conversation {
     message: string,
     timestamp: Date
 }
+
 export interface Message extends Conversation {
     email: string
 }
@@ -54,4 +55,22 @@ export type EmbeddingType = {
     question: string,
     answer: string,
     timestamp: string
+}
+
+export type ProfilePictureDetails = {
+    fileName: string,
+    file: {
+        uri: string | null,
+        mimeType: string,
+        fileSize: number
+    }
+}
+
+export type UpdateProfileType = {
+    email: string,
+    newEmail?: string,
+    name?: string,
+    bio?: string,
+    phoneNumber: string,
+    profilePictureDetails?: ProfilePictureDetails
 }
