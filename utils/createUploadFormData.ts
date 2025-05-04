@@ -7,6 +7,7 @@ const createUploadFormData = (request: UpdateProfileType) => {
     formData.append("name", request.name ?? '')
     formData.append("newEmail", request.newEmail ?? '')
     formData.append("bio", request.bio ?? '')
+
     if (request.profilePictureDetails !== null) {
         formData.append("profilePictureDetails", {
             name: request.profilePictureDetails?.fileName,
