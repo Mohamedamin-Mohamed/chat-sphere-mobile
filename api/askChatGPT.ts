@@ -5,8 +5,7 @@ const askChatGPT = async (request: EmbeddingType[], question: string, lastQuesti
         return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     })
 
-    const url = process.env.EXPO_PUBLIC_CHATGPT_CHAT_URL
-    const apiKey = process.env.EXPO_PUBLIC_OPENAI_APIKEY
+    const url = process.env.EXPO_PUBLIC_BACKEND_URL
 
     const chatSphereBio = process.env.EXPO_PUBLIC_CHATSPHERE_BIO
     const header = process.env.EXPO_PUBLIC_HEADER_MESSAGE
@@ -33,19 +32,15 @@ const askChatGPT = async (request: EmbeddingType[], question: string, lastQuesti
         {role: 'user', content: question}
     ]
 
-    return await fetch(url, {
+    return await fetch(`${url}/api/chat/completions`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            'Content-type': 'application/json',
         },
-        body: JSON.stringify({
-            'model': 'gpt-3.5-turbo',
-            messages: messages,
-            'max_tokens': 50
-        }),
+        body: JSON.stringify(messages),
         signal: controller.signal
     })
+
 }
 
 export default askChatGPT
