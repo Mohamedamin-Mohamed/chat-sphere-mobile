@@ -3,6 +3,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import Icon from "react-native-vector-icons/MaterialIcons"
 import {useState} from "react";
 import CampusConnectModal from "../../../modals/CampusConnectModal";
+import {router} from "expo-router";
 
 const Page = () => {
     const [refreshing, setRefreshing] = useState(false)
@@ -28,7 +29,8 @@ const Page = () => {
                         <TouchableOpacity style={styles.buttons} activeOpacity={0.8}>
                             <MaterialCommunityIcons name="qrcode" size={30}/>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.buttons} activeOpacity={0.8}>
+                        <TouchableOpacity style={styles.buttons} activeOpacity={0.8}
+                                          onPress={() => router.push('search')}>
                             <Icon name="add" size={30} color="gray"/>
                         </TouchableOpacity>
                     </View>
@@ -58,6 +60,7 @@ const Page = () => {
                     </View>
                 </View>
                 {campusConnectModal && <CampusConnectModal campusConnectModal={campusConnectModal}
+
                                                            handleCampusConnectModal={handleCampusConnectModal}/>}
             </ScrollView>
         </SafeAreaView>
