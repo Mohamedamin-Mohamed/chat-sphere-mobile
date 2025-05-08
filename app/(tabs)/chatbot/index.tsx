@@ -113,6 +113,10 @@ const Index = () => {
                 scrollViewRef.current?.scrollToEnd({animated: true});
             }, 100);
 
+            if (gptMessage.message.length > 450) {
+                gptMessage.message = "Response length exceeded. Try rephrasing or asking for less detail."
+            }
+
             const [userResponse, gptResponse] = await Promise.all([
                 saveMessage({...userQuestion, email: email}, new AbortController()),
                 saveMessage({...gptMessage, email: email}, new AbortController())
@@ -190,7 +194,7 @@ const Index = () => {
                 placeholderTimestamp.setMilliseconds(placeholderTimestamp.getMilliseconds() - 1);
                 const placeholderMessage: Conversation = {
                     sender: 'gpt',
-                    message: '[No response was provided]',
+                    message: 'Oops, I didn’t catch that. Want to try again?',
                     timestamp: placeholderTimestamp
                 };
                 try {
