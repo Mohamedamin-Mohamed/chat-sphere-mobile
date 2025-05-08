@@ -74,3 +74,11 @@ export type UpdateProfileType = {
     phoneNumber: string,
     profilePictureDetails?: ProfilePictureDetails
 }
+
+export type SearchUser = {
+    email: string,
+    name: string,
+    bio: string,
+    picture: string,
+    isOnline: boolean
+}
