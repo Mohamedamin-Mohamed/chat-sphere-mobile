@@ -12,8 +12,9 @@ import sanitizeUser from "../utils/sanitizeUser";
 import fetchUserInfo from "../api/fetchUserInfo";
 import {OauthSignUp} from "../types/types";
 
-const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID
+
 export const useGoogleOAuth = () => {
+    const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID
     const [request, response, googlePromptAsync] = Google.useAuthRequest({
         iosClientId: IOS_CLIENT_ID,
     })
@@ -23,7 +24,7 @@ export const useGoogleOAuth = () => {
         if (response?.type === "success") {
             const {authentication} = response;
             if (authentication) {
-                getUserInfo(authentication.accessToken, dispatch);
+                getUserInfo(authentication.accessToken, dispatch).catch(err => console.error(err));
             }
         }
     }, [response]);
@@ -32,7 +33,7 @@ export const useGoogleOAuth = () => {
 }
 
 export const getUserInfo = async (token: string, dispatch: Dispatch<UnknownAction>) => {
-    if (!token) return
+    if (!token) throw new Error("Token needs to be provided")
     try {
         const response = await fetchUserInfo(token)
         const user = await response.json()
@@ -63,7 +64,7 @@ export const signInWithApple = async (dispatch: Dispatch<UnknownAction>) => {
         })
 
         const name = (credential.fullName?.givenName || '') + " " + (credential.fullName?.familyName || '');
-        console.log('Credential is ', credential)
+
         const request: OauthSignUp = {
             email: credential.email,
             oauthProvider: 'Apple',
@@ -75,9 +76,8 @@ export const signInWithApple = async (dispatch: Dispatch<UnknownAction>) => {
 
         await handleResponse(request, dispatch)
     } catch (e: any) {
-        if (e.code === 'ERR_REQUEST_CANCELED') {
-            console.error('Request cancelled')
-        }
+        console.error('Request cancelled')
+
     }
 }
 
