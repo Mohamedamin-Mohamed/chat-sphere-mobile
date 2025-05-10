@@ -4,8 +4,6 @@ import {StyleSheet, View} from "react-native";
 import {DrawerNavigationHelpers} from "@react-navigation/drawer/lib/typescript/module/src/types";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {useEffect, useState} from "react";
 import {CommonActions} from "@react-navigation/native";
 
 interface DrawerItemType {

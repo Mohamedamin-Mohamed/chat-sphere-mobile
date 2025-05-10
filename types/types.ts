@@ -74,3 +74,26 @@ export type UpdateProfileType = {
     phoneNumber: string,
     profilePictureDetails?: ProfilePictureDetails
 }
+
+export type SearchUser = {
+    email: string,
+    name: string,
+    bio: string,
+    picture: string,
+    joinedDate: string
+    isOnline: boolean,
+    followerSize: number,
+    followingSize: number,
+    followingRequester: boolean,
+    followedByRequester: boolean,
+}
+
+export type FollowInteraction = {
+    followerEmail: string,
+    followingEmail: string
+}
+
+export type UserStats = {
+    followers: string,
+    followings: string
+}

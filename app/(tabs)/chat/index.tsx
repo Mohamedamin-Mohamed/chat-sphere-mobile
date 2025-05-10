@@ -3,6 +3,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import Icon from "react-native-vector-icons/MaterialIcons"
 import {useState} from "react";
 import CampusConnectModal from "../../../modals/CampusConnectModal";
+import {router} from "expo-router";
 
 const Page = () => {
     const [refreshing, setRefreshing] = useState(false)
@@ -26,10 +27,11 @@ const Page = () => {
                     <Text style={styles.chatText}>Chat</Text>
                     <View style={styles.sideView}>
                         <TouchableOpacity style={styles.buttons} activeOpacity={0.8}>
-                            <MaterialCommunityIcons name="qrcode" size={30}/>
+                            <MaterialCommunityIcons name="qrcode" size={30} color="#4F46E5"/>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.buttons} activeOpacity={0.8}>
-                            <Icon name="add" size={30} color="gray"/>
+                        <TouchableOpacity style={styles.buttons} activeOpacity={0.8}
+                                          onPress={() => router.push('search')}>
+                            <Icon name="search" size={30} color="#4F46E5"/>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -58,6 +60,7 @@ const Page = () => {
                     </View>
                 </View>
                 {campusConnectModal && <CampusConnectModal campusConnectModal={campusConnectModal}
+
                                                            handleCampusConnectModal={handleCampusConnectModal}/>}
             </ScrollView>
         </SafeAreaView>
@@ -80,7 +83,8 @@ const styles = StyleSheet.create({
     },
     chatText: {
         fontSize: 30,
-        fontWeight: "600"
+        fontWeight: "600",
+        color: "#4F46E5"
     },
     sideView: {
         flexDirection: 'row',

@@ -12,6 +12,8 @@ import {
     View,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import {Ionicons} from '@expo/vector-icons'
+
 import React, {useEffect, useRef, useState} from "react";
 import {useSelector} from "react-redux";
 import {Conversation, EmbeddingType, RootState} from "../../../types/types";
@@ -33,6 +35,7 @@ const Index = () => {
     const [disabled, setDisabled] = useState(false);
     const [showTypingIndicator, setShowTypingIndicator] = useState(false);
     const scrollViewRef = useRef<ScrollView>(null);
+    const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
     const handleSend = async () => {
         if (message === '') return;
@@ -113,6 +116,10 @@ const Index = () => {
                 scrollViewRef.current?.scrollToEnd({animated: true});
             }, 100);
 
+            if (gptMessage.message.length > 450) {
+                gptMessage.message = "Response length exceeded. Try rephrasing or asking for less detail."
+            }
+
             const [userResponse, gptResponse] = await Promise.all([
                 saveMessage({...userQuestion, email: email}, new AbortController()),
                 saveMessage({...gptMessage, email: email}, new AbortController())
@@ -190,7 +197,7 @@ const Index = () => {
                 placeholderTimestamp.setMilliseconds(placeholderTimestamp.getMilliseconds() - 1);
                 const placeholderMessage: Conversation = {
                     sender: 'gpt',
-                    message: '[No response was provided]',
+                    message: 'Oops, I didn’t catch that. Want to try again?',
                     timestamp: placeholderTimestamp
                 };
                 try {
@@ -278,11 +285,10 @@ const Index = () => {
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>AI Assistant</Text>
             </View>
-
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
                 style={styles.keyboardAvoidView}
-                keyboardVerticalOffset={100}
+                keyboardVerticalOffset={50}
             >
                 {initialLoading ? (
                     <View style={styles.initialLoadingContainer}>
@@ -291,6 +297,11 @@ const Index = () => {
                     </View>
                 ) : (
                     <ScrollView
+                        onScroll={(event) => {
+                            const {contentOffset, layoutMeasurement, contentSize} = event.nativeEvent;
+                            const isAtBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 50
+                            setShowScrollToBottom(!isAtBottom)
+                        }}
                         refreshControl={<RefreshControl refreshing={initialLoading} onRefresh={getMessages}/>}
                         ref={scrollViewRef}
                         contentContainerStyle={styles.scrollContainer}
@@ -347,7 +358,15 @@ const Index = () => {
                         {showTypingIndicator && <TypingIndicator/>}
                     </ScrollView>
                 )}
+                {showScrollToBottom && (
+                    <View style={styles.arrowDownView}>
+                        <TouchableOpacity style={styles.arrowDownViewButton}
+                                          onPress={() => scrollViewRef.current?.scrollToEnd({animated: true})}>
+                            <Ionicons name="arrow-down-circle" size={50} color="gray"/>
 
+                        </TouchableOpacity>
+                    </View>
+                )}
                 <View style={styles.inputContainer}>
                     <TextInput
                         placeholder="Type a message..."
@@ -489,6 +508,14 @@ const styles = StyleSheet.create({
         color: "#94a3b8",
         alignSelf: "flex-end",
         marginTop: 4,
+    },
+    arrowDownView: {
+        position: 'relative',
+        alignItems: 'flex-end',
+        paddingHorizontal: 16,
+    },
+    arrowDownViewButton: {
+        borderRadius: 8,
     },
     typingIndicatorContainer: {
         flexDirection: 'row',
