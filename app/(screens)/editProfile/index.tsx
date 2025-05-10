@@ -13,7 +13,7 @@ import {
 import {router, useNavigation} from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {useDispatch, useSelector} from "react-redux";
-import {ProfilePictureDetails, RootState} from "../../../types/types";
+import {ProfilePictureDetails, RootState, UserStats} from "../../../types/types";
 import React, {useEffect, useState} from "react";
 import * as ImagePicker from "expo-image-picker";
 import AvatarModal from "../../../modals/AvatarModal";
@@ -29,6 +29,7 @@ import updateProfile from "../../../api/updateProfile";
 import Toast from "react-native-toast-message";
 import {setUserInfo} from "../../../redux/userSlice";
 import sanitizeUser from "../../../utils/sanitizeUser";
+import getUserStats from "../../../api/getUserStats";
 
 const Page = () => {
     const userInfo = useSelector((state: RootState) => state.userInfo);
@@ -62,6 +63,7 @@ const Page = () => {
     const [showEmailNotFoundModal, setShowEmailNotFoundModal] = useState(false)
     const [loading, setLoading] = useState(false)
     const [disabled, setDisabled] = useState(false)
+    const [userStats, setUserStats] = useState<UserStats>({followers: "-", followings: "-"})
 
     const imagePicker = async () => {
         Alert.alert(
@@ -271,6 +273,37 @@ const Page = () => {
         router.push(route)
     }
 
+    useEffect(() => {
+        const loadUserStats = async () => {
+            const response = await getUserStats(email, new AbortController())
+            if (response.ok) {
+                const userStats = await response.json()
+                console.log(userStats)
+                setUserStats(userStats)
+            }
+        }
+        loadUserStats().catch(err => console.error(err))
+    }, []);
+
+    const renderUserStats = () => (
+        <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+                <Text style={styles.statNumber}>0</Text>
+                <Text style={styles.statLabel}>Posts</Text>
+            </View>
+            <View style={styles.statDivider}/>
+            <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{userStats.followers}</Text>
+                <Text style={styles.statLabel}>Followers</Text>
+            </View>
+            <View style={styles.statDivider}/>
+            <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{userStats.followings}</Text>
+                <Text style={styles.statLabel}>Following</Text>
+            </View>
+        </View>
+    );
+
     return (
         <SafeAreaView style={{flex: 1, backgroundColor: 'white'}}>
             <View style={styles.headerContainer}>
@@ -306,7 +339,7 @@ const Page = () => {
                             <Icon name="edit" size={16} color="white"/>
                         </TouchableOpacity>
                     </View>
-
+                    {renderUserStats()}
                     <TouchableOpacity style={styles.viewProfile} activeOpacity={1}
                                       onPress={() => setViewProfileModal(prev => !prev)}>
                         <Text style={styles.viewProfileText}>Preview profile</Text>
@@ -476,6 +509,33 @@ const styles = StyleSheet.create({
     abbrevText: {
         fontSize: 56,
         fontWeight: '700',
+    },
+    statsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '80%',
+        paddingVertical: 16,
+        marginBottom: 20,
+    },
+    statItem: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    statNumber: {
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 4,
+        color: '#333',
+    },
+    statLabel: {
+        fontSize: 12,
+        color: '#777',
+        textTransform: 'uppercase',
+    },
+    statDivider: {
+        width: 1,
+        backgroundColor: '#777',
+        height: '100%',
     },
     viewProfile: {
         backgroundColor: 'black',
