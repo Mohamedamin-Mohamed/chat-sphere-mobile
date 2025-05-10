@@ -80,5 +80,20 @@ export type SearchUser = {
     name: string,
     bio: string,
     picture: string,
-    isOnline: boolean
+    joinedDate: string
+    isOnline: boolean,
+    followerSize: number,
+    followingSize: number,
+    followingRequester: boolean,
+    followedByRequester: boolean,
+}
+
+export type FollowInteraction = {
+    followerEmail: string,
+    followingEmail: string
+}
+
+export type UserStats = {
+    followers: string,
+    followings: string
 }
