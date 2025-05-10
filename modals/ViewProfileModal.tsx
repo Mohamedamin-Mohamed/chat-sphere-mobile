@@ -4,6 +4,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import {usePathname, useRouter} from "expo-router";
 import {useSelector} from "react-redux";
 import {RootState} from "../types/types";
+import {Ionicons} from "@expo/vector-icons";
 
 interface ViewProfileModalProps {
     image?: string | null
@@ -36,11 +37,11 @@ const ViewProfileModal = ({image, setViewProfileModal, fullName, abbrevName}: Vi
                     </View>
                     <Text style={styles.fullNameText}>{fullName}</Text>
                     <View style={styles.joinDate}>
-                        <Icon name="timeline" size={20} color="#898686FF"/>
+                        <Ionicons name="calendar-outline" size={20} color="#4F46E5"/>
                         <Text style={styles.joinDateText}>Since {joinedDate}</Text>
                     </View>
                     <TouchableOpacity style={styles.editProfile} activeOpacity={0.4} onPress={handleProfileEdit}>
-                        <Icon name="edit" size={25} color="black"/>
+                        <Icon name="edit" size={25} color="#4F46E5"/>
                         <Text style={styles.editProfileText}>Edit profile</Text>
                     </TouchableOpacity>
                 </View>
