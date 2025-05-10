@@ -1,40 +1,43 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {SafeAreaView, StyleSheet, TextInput, TouchableOpacity, View} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import searchQuery from "../../../api/searchQuery";
 import DisplayUsers from "./DisplayUsers";
-import {SearchUser} from "../../../types/types";
+import {RootState, SearchUser} from "../../../types/types";
+import {useSelector} from "react-redux";
+import {useFocusEffect} from "expo-router";
 
 const SearchBar = () => {
+    const userInfo = useSelector((state: RootState) => state.userInfo)
+    const email = userInfo.email
+
     const [searchText, setSearchText] = useState('')
     const [users, setUsers] = useState<SearchUser[]>([])
     const [loading, setLoading] = useState(false)
     const [pressed, setPressed] = useState(false)
 
-    useEffect(() => {
-        const delayDebounce = setTimeout(() => {
-            if (searchText.trim().length === 0) {
-                setUsers([])
-                return
-            }
-            const searchUsers = async () => {
-                setLoading(true)
-                try {
-                    const response = await searchQuery(searchText, new AbortController())
-                    if (response.ok) {
-                        const data = await response.json()
-                        setUsers(data)
+    useFocusEffect(
+        useCallback(() => {
+            if (searchText.trim().length > 0) {
+                const searchUsers = async () => {
+                    setLoading(true)
+                    try {
+                        const response = await searchQuery(email, searchText, new AbortController())
+                        if (response.ok) {
+                            const data = await response.json()
+                            setUsers(data)
+                        }
+                    } catch (exp) {
+                        console.error('Something went wrong: ', exp)
+                    } finally {
+                        setLoading(false)
                     }
-                } catch (exp: any) {
-                    console.error('Something went wrong: ', exp)
-                } finally {
-                    setLoading(false)
-                }
+                };
+                searchUsers().catch(err => console.error(err));
             }
-            searchUsers().catch(err => console.error(err))
-        }, 1000)
-        return () => clearTimeout(delayDebounce)
-    }, [searchText, pressed]);
+        }, [searchText, pressed])
+    )
+
 
     return (
         <SafeAreaView style={{flex: 1, alignSelf: 'center', top: 100}}>
@@ -48,7 +51,7 @@ const SearchBar = () => {
                     style={styles.input}
                 />
                 <TouchableOpacity style={styles.button} onPress={() => setPressed(true)}>
-                    <Icon name="search" size={20} color="#fff"/>
+                    <Icon name="search" size={20} color="white"/>
                 </TouchableOpacity>
             </View>
             <DisplayUsers users={users} loading={loading}/>
@@ -79,7 +82,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
     },
     button: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#4F46E5',
         padding: 10,
         borderRadius: 10,
         marginLeft: 8,
