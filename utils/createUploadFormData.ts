@@ -1,7 +1,6 @@
 import {UpdateProfileType} from "../types/types";
 
 const createUploadFormData = (request: UpdateProfileType) => {
-    console.log('Request is ', request)
     const formData = new FormData();
     formData.append("email", request.email)
     formData.append("phoneNumber", request.phoneNumber)
