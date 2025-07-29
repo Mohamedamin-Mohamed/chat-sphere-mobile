@@ -3,7 +3,6 @@ import * as AppleAuthentication from "expo-apple-authentication"
 
 import {Dispatch, useEffect} from "react"
 import {router} from "expo-router"
-import oauthSignUp from "../api/oauthSignUp";
 import Toast from "react-native-toast-message";
 import {useDispatch} from "react-redux";
 import {setUserInfo} from "../redux/userSlice";
@@ -11,6 +10,8 @@ import {UnknownAction} from "redux";
 import sanitizeUser from "../utils/sanitizeUser";
 import fetchUserInfo from "../api/fetchUserInfo";
 import {OauthSignUp} from "../types/types";
+import storeToken from "../utils/storeToken";
+import api from "../api/api";
 
 
 export const useGoogleOAuth = () => {
@@ -23,8 +24,11 @@ export const useGoogleOAuth = () => {
     useEffect(() => {
         if (response?.type === "success") {
             const {authentication} = response;
-            if (authentication) {
-                getUserInfo(authentication.accessToken, dispatch).catch(err => console.error(err));
+            if (authentication?.accessToken) {
+                getUserInfo(authentication.accessToken, dispatch)
+                    .catch(err => console.error(err));
+            } else {
+                console.error("No access token from Google auth response")
             }
         }
     }, [response]);
@@ -44,13 +48,22 @@ export const getUserInfo = async (token: string, dispatch: Dispatch<UnknownActio
             oauthProvider: 'Google',
             name: user.name,
             picture: user.picture,
-            emailVerified: user.verified_email,
+            emailVerified: user.verified_email ?? false,
             accessToken: token
         }
+
         await handleResponse(request, dispatch)
 
-    } catch (err) {
-        console.error('Failed to fetch user data:', err)
+    } catch (exp: any) {
+        if (exp.response) {
+            const message = exp.response?.data?.message || exp.response?.statusText || 'Something went wrong';
+            Toast.show({
+                type: 'error',
+                text1: message
+            })
+        } else {
+            console.error('Failed to fetch user data:', exp)
+        }
     }
 }
 
@@ -73,29 +86,28 @@ export const signInWithApple = async (dispatch: Dispatch<UnknownAction>) => {
             identityToken: credential.identityToken,
             oauthId: credential.user
         }
-
         await handleResponse(request, dispatch)
-    } catch (e: any) {
-        console.error('Request cancelled')
-
+    } catch (exp: any) {
+        if (exp.response) {
+            const message = exp.response?.data?.message || exp.response?.statusText || 'Something went wrong';
+            Toast.show({
+                type: 'error',
+                text1: message
+            })
+        } else {
+            console.error('Network error, request cancelled')
+        }
     }
 }
 
 const handleResponse = async (request: OauthSignUp, dispatch: Dispatch<UnknownAction>) => {
-    const oauthResponse = await oauthSignUp(request, new AbortController());
-
-    if (!oauthResponse.ok) {
-        const message = await oauthResponse.text()
-        Toast.show({
-            type: 'error',
-            text1: message
-        })
-    } else {
-        const OauthResponse = await oauthResponse.json()
-        const user = OauthResponse.user
-        const sanitizedUser = sanitizeUser(user)
-        dispatch(setUserInfo(sanitizedUser))
-        router.push('chat')
-    }
+    const oauthResponse = await api.post('auth/signup/oauth', request)
+    const data = oauthResponse.data
+    const user = data.user
+    const token = data.token
+    await storeToken(token)
+    const sanitizedUser = sanitizeUser(user)
+    dispatch(setUserInfo(sanitizedUser))
+    router.push('home')
 }
 
