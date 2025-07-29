@@ -1,95 +1,52 @@
-import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import {Ionicons} from '@expo/vector-icons'
+import {ScrollView, StyleSheet,} from "react-native";
 
 import React, {useEffect, useRef, useState} from "react";
 import {useSelector} from "react-redux";
 import {Conversation, EmbeddingType, RootState} from "../../../types/types";
 import askChatGPT from "../../../api/askChatGPT";
-import saveMessage from "../../../api/saveMessage";
 import Toast from "react-native-toast-message";
-import loadMessages from "../../../api/loadMessages";
 import {format} from "date-fns";
-import createEmbedding from "../../../api/createEmbedding";
-import searchEmbeddings from "../../../api/searchEmbeddings";
+import api from "../../../api/api";
+import axios from "axios";
+import ChatInterface from "../../../components/ChatInterface";
 
 const Index = () => {
     const [message, setMessage] = useState("");
     const userInfo = useSelector((state: RootState) => state.userInfo);
     const email = userInfo.email;
-    const firstName = userInfo.name.split(" ")[0];
     const [conversation, setConversation] = useState<Conversation[]>([]);
     const [initialLoading, setInitialLoading] = useState(true);
     const [disabled, setDisabled] = useState(false);
     const [showTypingIndicator, setShowTypingIndicator] = useState(false);
     const scrollViewRef = useRef<ScrollView>(null);
-    const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
     const handleSend = async () => {
         if (message === '') return;
+        scrollViewRef.current?.scrollToEnd({animated: true})
 
         const date = new Date();
         const userQuestion = {sender: 'user', message: message.trim(), timestamp: date};
         const currentMsg = message;
 
         setMessage('');
-
         try {
             setConversation(prevState => [...prevState, userQuestion]);
-            /**So create an embedding of the users current message, and this embedding will be used to retrieve the top-k most
-             * semantically similar questions and answers pairs. A prompt should be built combining top-k retrieved
-             * Q&A pairs (context) and the users question, which will be sent to the LLM to have relevant context to
-             * give better answer.
+            /**Create an embedding of the user's current message. This embedding will be used to retrieve the top-k most
+             * semantically similar question–answer pairs. A prompt should then be constructed by combining the top-k
+             * retrieved Q&A pairs (as context) with the user's question. This prompt is sent to the LLM to provide
+             * relevant context and improve the quality of the answer.
              */
 
+            scrollViewRef.current?.scrollToEnd({animated: true})
             const request = {question: userQuestion.message}
-            const searchEmbeddingResponse = await searchEmbeddings(request, new AbortController());
-
-            let tempRequest: EmbeddingType[] = []
-            if (searchEmbeddingResponse.ok) {
-                tempRequest = await searchEmbeddingResponse.json()
-            } else {
-                const message = await searchEmbeddingResponse.text()
-                showToastMessage(false, message)
-            }
-            setTimeout(() => {
-                scrollViewRef.current?.scrollToEnd({animated: true});
-            }, 100);
-
+            const searchEmbeddingResponse = await api.post('api/embeddings/search', request)
+            let tempRequest: EmbeddingType[] = searchEmbeddingResponse.data
             setShowTypingIndicator(true);
-            setTimeout(() => {
-                scrollViewRef.current?.scrollToEnd({animated: true});
-            }, 100);
 
             const lastFourConversation = conversation.slice(-4)
 
-            const response = await askChatGPT(tempRequest, currentMsg, lastFourConversation, new AbortController());
-            const data = await response.json();
-
-            if (response.status === 400) {
-                const text = await response.text()
-                showToastMessage(false, text);
-                return
-            } else if (response.status === 500) {
-                const splitMessage = data.error.message.split(' ')
-                const message = splitMessage.slice(0, 3).join(' ')
-
-                setShowTypingIndicator(false)
-                showToastMessage(false, message)
-                return
-            }
+            const chatCompletionsResponse = await askChatGPT(tempRequest, currentMsg, lastFourConversation, new AbortController());
+            const data = chatCompletionsResponse.data
             const gptMessageContent = data.choices[0].message.content;
 
             const embeddingsRequest = {
@@ -98,43 +55,40 @@ const Index = () => {
                 timestamp: date
             }
             /**
-             * Here we send a request to create an embedding of the users question, and both the question and answer pair
-             * will be stored in OpenSearch as a vector store.
+             * We send a request to create an embedding of the user's question, and the question–answer pair is stored
+             * in OpenSearch as a vector entry.
              */
-
-            const embeddingResponse = await createEmbedding(embeddingsRequest, new AbortController())
-            if (response.status === 500) {
-                const message = await embeddingResponse.text()
-                showToastMessage(false, message)
-            }
+            await api.post('api/embeddings/', embeddingsRequest)
 
             setShowTypingIndicator(false);
             const gptMessage = {sender: 'gpt', message: gptMessageContent, timestamp: new Date()};
             setConversation(prevState => [...prevState, gptMessage]);
 
-            setTimeout(() => {
-                scrollViewRef.current?.scrollToEnd({animated: true});
-            }, 100);
-
             if (gptMessage.message.length > 450) {
                 gptMessage.message = "Response length exceeded. Try rephrasing or asking for less detail."
             }
 
-            const [userResponse, gptResponse] = await Promise.all([
-                saveMessage({...userQuestion, email: email}, new AbortController()),
-                saveMessage({...gptMessage, email: email}, new AbortController())
+            await Promise.all([
+                api.post('api/message', {...userQuestion, email: email}),
+                api.post('api/message', {...gptMessage, email: email})
             ])
 
-            if (!userResponse.ok || !gptResponse.ok) {
-                const responseJson = userResponse.ok ? await gptResponse.json() : await userResponse.json();
-                const errorMessage = responseJson.message;
-
-                showToastMessage(false, errorMessage, 'Error occurred')
-            }
         } catch (exp: any) {
-            console.error(exp);
             setShowTypingIndicator(false);
-            showToastMessage(false, 'Failed to send request. Please try again.', 'Error')
+            if (exp.response) {
+                const message = exp.response.statusText
+                //showToastMessage(false, message, "Error Occurred")
+            } else if (exp.response.statusText === 500) {
+                const splitMessage = exp.response.message.split(' ')
+                const message = splitMessage.slice(0, 3).join(' ')
+
+                setShowTypingIndicator(false)
+                showToastMessage(false, message)
+            } else {
+                showToastMessage(false, 'Failed to send request. Please try again.', 'Network Error')
+            }
+        } finally {
+            setShowTypingIndicator(false)
         }
     }
 
@@ -146,33 +100,35 @@ const Index = () => {
             onHide: () => setDisabled(false)
         })
     }
+
     const getMessages = async () => {
         try {
             setInitialLoading(true);
-            const response = await loadMessages(email, new AbortController());
-            if (response.ok) {
-                const messages = await response.json();
+            const response = await api.get(`api/message`, {
+                params: {email}
+            })
+            const messages = response.data;
+            const sortedMessages = [...messages].sort((a, b) => {
+                return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+            });
 
-                const sortedMessages = [...messages].sort((a, b) => {
-                    return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
-                });
+            const fixedOrderMessages = await ensureProperMessageOrder(sortedMessages);
 
-                const fixedOrderMessages = await ensureProperMessageOrder(sortedMessages);
+            setConversation(fixedOrderMessages);
 
-                setConversation(fixedOrderMessages);
+            setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({animated: true});
+            }, 500)
+        } catch (exp: any) {
+            if (axios.isAxiosError(exp) && exp.response) {
 
-                setTimeout(() => {
-                    scrollViewRef.current?.scrollToEnd({animated: false});
-                }, 500)
             } else {
-                showToastMessage(false, 'Failed to load messages', 'Error')
+                console.error(exp);
             }
-        } catch (error) {
-            console.error(error);
         } finally {
             setInitialLoading(false);
         }
-    };
+    }
 
     useEffect(() => {
         getMessages().catch(err => console.error(err))
@@ -201,7 +157,7 @@ const Index = () => {
                     timestamp: placeholderTimestamp
                 };
                 try {
-                    await saveMessage({...placeholderMessage, email: email}, new AbortController())
+                    await api.post('auth/message/create', {...placeholderMessage, email: email})
                 } catch (exp) {
                     console.error(exp)
                 }
@@ -233,7 +189,7 @@ const Index = () => {
         } else {
             return format(messageDate, 'MMMM dd, yyyy');
         }
-    };
+    }
 
     const groupedMessages = conversation.reduce((groups: Record<string, Conversation[]>, message: Conversation) => {
         const date = formatDate(new Date(message.timestamp));
@@ -242,157 +198,27 @@ const Index = () => {
         }
         groups[date].push(message);
         return groups;
-    }, {});
+    }, {})
 
     const sortedDates = Object.keys(groupedMessages).sort((a, b) => {
-        const dateA = new Date(groupedMessages[a][0].timestamp);
-        const dateB = new Date(groupedMessages[b][0].timestamp);
-        return dateA.getTime() - dateB.getTime();
-    });
-
-
-    const TypingIndicator = () => (
-        <View>
-            <Text style={styles.gptLabel}>AI Co-Pilot</Text>
-            <View style={styles.gptMessage}>
-                <View style={styles.typingIndicatorContainer}>
-                    <View style={styles.typingDot}>
-                        <ActivityIndicator size="small" color="#3b82f6"/>
-                    </View>
-                    <View style={styles.typingDot}>
-                        <ActivityIndicator size="small" color="#3b82f6"/>
-                    </View>
-                    <View style={styles.typingDot}>
-                        <ActivityIndicator size="small" color="#3b82f6"/>
-                    </View>
-                </View>
-                <Text style={styles.messageTime}>
-                    {format(new Date(), 'h:mm a')}
-                </Text>
-            </View>
-        </View>
-    )
-
-    const handleEnterPress = async (nativeEvent: { key: string }) => {
-        if (nativeEvent.key === 'Enter' && message !== '') {
-            await handleSend()
-            setMessage('')
-        }
-    }
+        const dateA = new Date(groupedMessages[a][0].timestamp)
+        const dateB = new Date(groupedMessages[b][0].timestamp)
+        return dateA.getTime() - dateB.getTime()
+    })
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>AI Assistant</Text>
-            </View>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                style={styles.keyboardAvoidView}
-                keyboardVerticalOffset={50}
-            >
-                {initialLoading ? (
-                    <View style={styles.initialLoadingContainer}>
-                        <ActivityIndicator size="large" color="#3b82f6"/>
-                        <Text style={styles.loadingText}>Loading conversations...</Text>
-                    </View>
-                ) : (
-                    <ScrollView
-                        onScroll={(event) => {
-                            const {contentOffset, layoutMeasurement, contentSize} = event.nativeEvent;
-                            const isAtBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 50
-                            setShowScrollToBottom(!isAtBottom)
-                        }}
-                        refreshControl={<RefreshControl refreshing={initialLoading} onRefresh={getMessages}/>}
-                        ref={scrollViewRef}
-                        contentContainerStyle={styles.scrollContainer}
-                        showsVerticalScrollIndicator={false}
-                    >
-                        {conversation.length <= 0 ? (
-                            <View style={styles.emptyStateContainer}>
-                                <Icon name="chat" size={80} color="#CBD5E1"/>
-                                <Text style={styles.greetingText}>Hey {firstName} 👋</Text>
-                                <Text style={styles.subText}>How can I assist you today?</Text>
-                            </View>
-                        ) : (
-                            sortedDates.map((date) => (
-                                <View key={date} style={styles.dateGroup}>
-                                    <View style={styles.dateHeaderContainer}>
-                                        <Text style={styles.dateHeader}>{date}</Text>
-                                    </View>
-
-                                    {groupedMessages[date].map((msg: Conversation, idx: number) => {
-                                        // Determine if this is the first message from this sender in this sequence
-                                        const isPreviousSameSender = idx > 0 && groupedMessages[date][idx - 1].sender === msg.sender;
-                                        // Add spacing between different senders' messages
-                                        const isNewSenderGroup = idx > 0 && groupedMessages[date][idx - 1].sender !== msg.sender;
-
-                                        return (
-                                            <View key={idx}
-                                                  style={isNewSenderGroup ? styles.newSenderGroup : undefined}>
-                                                {/* Only show sender label when it's the first message from this sender in a sequence */}
-                                                {(!isPreviousSameSender) && (
-                                                    <Text
-                                                        style={msg.sender === "user" ? styles.userLabel : styles.gptLabel}>
-                                                        {msg.sender === "user" ? "You" : "AI Assistant"}
-                                                    </Text>
-                                                )}
-
-                                                <View
-                                                    style={msg.sender === "user" ? styles.userMessage : styles.gptMessage}>
-                                                    <Text
-                                                        style={msg.sender === "user" ? styles.userMessageText : styles.gptMessageText}>
-                                                        {msg.message}
-                                                    </Text>
-
-                                                    <Text style={styles.messageTime}>
-                                                        {format(new Date(msg.timestamp), 'h:mm a')}
-                                                    </Text>
-                                                </View>
-                                            </View>
-                                        );
-                                    })}
-                                </View>
-                            ))
-                        )}
-
-                        {showTypingIndicator && <TypingIndicator/>}
-                    </ScrollView>
-                )}
-                {showScrollToBottom && (
-                    <View style={styles.arrowDownView}>
-                        <TouchableOpacity style={styles.arrowDownViewButton}
-                                          onPress={() => scrollViewRef.current?.scrollToEnd({animated: true})}>
-                            <Ionicons name="arrow-down-circle" size={50} color="gray"/>
-
-                        </TouchableOpacity>
-                    </View>
-                )}
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        placeholder="Type a message..."
-                        value={message}
-                        onChangeText={setMessage}
-                        style={styles.input}
-                        placeholderTextColor="#94a3b8"
-                        multiline
-                        maxLength={1000}
-                        onKeyPress={({nativeEvent}) => handleEnterPress(nativeEvent)}
-                        editable={!disabled}
-                    />
-                    <TouchableOpacity
-                        style={[
-                            styles.sendButton,
-                            (message.trim() === '' || showTypingIndicator) && styles.sendButtonDisabled
-                        ]}
-                        onPress={handleSend}
-                        disabled={disabled || message.trim() === '' || showTypingIndicator}
-                    >
-                        <Icon name="send" size={20} color="white"/>
-                    </TouchableOpacity>
-                </View>
-            </KeyboardAvoidingView>
-            <Toast topOffset={64}/>
-        </SafeAreaView>
+        <ChatInterface initialLoading={initialLoading}
+                       disabled={disabled}
+                       showTypingIndicator={showTypingIndicator}
+                       handleSend={handleSend}
+                       message={message}
+                       setMessage={setMessage}
+                       getMessages={getMessages}
+                       scrollViewRef={scrollViewRef}
+                       conversation={conversation}
+                       sortedDates={sortedDates}
+                       groupedMessages={groupedMessages}
+        />
     );
 };
 
