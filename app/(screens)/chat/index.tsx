@@ -7,6 +7,7 @@ import {RootState} from "../../../types/types";
 
 const Page = () => {
     const {recipientEmail} = useLocalSearchParams()
+    console.log(`Recipient email is ${recipientEmail}`)
     const [disabled, setDisabled] = useState(false)
     const image = require("../../../assets/images/campus-directory.png")
     const userInfo = useSelector((state: RootState) => state.userInfo)
