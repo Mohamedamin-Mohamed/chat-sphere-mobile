@@ -1,75 +1,89 @@
 import React, {useState} from 'react';
 import {router, useLocalSearchParams} from 'expo-router';
-import {
-    Image,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
-} from 'react-native';
+import {Image, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {FollowInteraction, RootState, SearchUser} from "../../../types/types";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {useSelector} from "react-redux";
-import followUser from "../../../api/followUser";
 import Toast from "react-native-toast-message";
-import unFollowUser from "../../../api/unFollowUser";
+import api from "../../../api/api";
+import axios from "axios";
 
 const UserProfileScreen = () => {
-    const {user} = useLocalSearchParams();
-    const parsedUser: SearchUser = JSON.parse(user as string);
-
+    const {user} = useLocalSearchParams()
+    const parsedUser: SearchUser = JSON.parse(user as string)
     const userInfo = useSelector((state: RootState) => state.userInfo)
     const followerEmail = userInfo.email
-
     const [disabled, setDisabled] = useState(false)
 
-    const [requesterFollows, setRequesterFollows] = useState(parsedUser.followedByRequester);
+    const [requesterFollows, setRequesterFollows] = useState(parsedUser.isFollowedByRequester);
     const [followerCount, setFollowerCount] = useState(parsedUser.followerSize);
 
-    const mutualFriends = 8;
-    const mutualGroups = 2;
     const joinedDate = parsedUser.joinedDate
     const followings = parsedUser.followingSize
     const followingEmail = parsedUser.email
+    const mutualFriendsSize = parsedUser.topThreeMutualFriends.length
+    const topThreeMutualFriendsNames = parsedUser.topThreeMutualFriends.map(user => user.name.split(' ')[0]).join(', ' +
+        '')
+    const mutualFriends = parsedUser.topThreeMutualFriends
     const isOnline = parsedUser.isOnline
-
-    const lastActive = "2 hours ago";
+    const lastActive = "2 hours ago"
+    //place-holder for now
+    const mutualGroups = 0
 
     const followOperation = async () => {
         const followRequest: FollowInteraction = {
-            followerEmail: followerEmail, followingEmail: followingEmail
-        }
-        const response = await followUser(followRequest, new AbortController())
+            followerEmail,
+            followingEmail
+        };
 
-        if (!response.ok) {
-            const text = await response.text() ?? "An error occurred!!!"
-            showToastMessage(text, false)
-            return
+        try {
+            const controller = new AbortController();
+            await api.post(
+                'api/follow/add',
+                followRequest,
+                {signal: controller.signal}
+            );
+
+            setRequesterFollows(true);
+            setFollowerCount(prev => prev + 1);
+
+        } catch (err: any) {
+            if (axios.isAxiosError(err) && err.response) {
+                const message = err.response.data?.message || "Follow attempt failed. Please try again shortly.";
+                showToastMessage(message, false);
+            } else {
+                console.error("Unexpected follow error:", err);
+            }
         }
-        setRequesterFollows(true)
-        setFollowerCount(prev => prev + 1)
-    }
+    };
 
     const unFollowOperation = async () => {
         const unfollowRequest: FollowInteraction = {
-            followerEmail: followerEmail, followingEmail: followingEmail
+            followerEmail,
+            followingEmail
+        };
+
+        try {
+            const controller = new AbortController();
+            await api.post(
+                'api/follow/remove',
+                unfollowRequest,
+                {signal: controller.signal}
+            );
+
+            setRequesterFollows(false);
+            setFollowerCount(prev => prev - 1);
+
+        } catch (err: any) {
+            if (axios.isAxiosError(err) && err.response) {
+                const message = err.response.data?.message || "Unfollow attempt failed. Please try again shortly.";
+                showToastMessage(message, false);
+            } else {
+                console.error("Unexpected unfollow error:", err);
+            }
         }
-
-        const response = await unFollowUser(unfollowRequest, new AbortController());
-
-        if (!response.ok) {
-            const text = await response.text() ?? "An error occurred"
-            showToastMessage(text, false)
-        }
-
-        setRequesterFollows(false)
-        setFollowerCount(prev => prev - 1)
-    }
+    };
 
     const showToastMessage = (message: string, successful: boolean) => {
         Toast.show({
@@ -79,6 +93,14 @@ const UserProfileScreen = () => {
             onHide: () => setDisabled(false)
         })
     }
+
+    const handleMessageSending = () => {
+        router.replace({
+            pathname: 'chat',
+            params: {recipientEmail: parsedUser.email}
+        })
+    }
+
     const renderUserStats = () => (
         <View style={styles.statsContainer}>
             <View style={styles.statItem}>
@@ -109,7 +131,7 @@ const UserProfileScreen = () => {
                 </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity disabled={disabled} style={styles.messageButton}>
+            <TouchableOpacity disabled={disabled} style={styles.messageButton} onPress={handleMessageSending}>
                 <Text style={styles.messageButtonText}>Message</Text>
             </TouchableOpacity>
 
@@ -138,6 +160,13 @@ const UserProfileScreen = () => {
         </View>
     );
 
+    const handleMutualFriendsDisplay = () => {
+        router.push({
+            pathname: 'mutualFriends',
+            params: {users: JSON.stringify(mutualFriends)}
+        })
+    }
+
     const renderMutualConnections = () => (
         <View style={styles.section}>
             <Text style={styles.sectionTitle}>Connections</Text>
@@ -147,25 +176,36 @@ const UserProfileScreen = () => {
                     <Ionicons name="people-outline" size={20} color="#6C63FF"/>
                 </View>
                 <View style={styles.connectionInfo}>
-                    <Text style={styles.connectionTitle}>{mutualFriends} mutual friends</Text>
-                    <Text style={styles.connectionSubtitle}>Including Sarah, Mike, and Alex</Text>
+                    <Text style={styles.connectionTitle}>
+                        {mutualFriendsSize} mutual {mutualFriendsSize === 1 ? "friend" : "friends"}
+                    </Text>
+                    {mutualFriendsSize > 0 ? (
+                        <Text style={styles.connectionSubtitle}>Including {topThreeMutualFriendsNames}</Text>
+                    ) : (
+                        <Text style={styles.connectionSubtitle}>No mutual friends or connection depth reached</Text>
+                    )}
                 </View>
-                <TouchableOpacity>
-                    <Ionicons name="chevron-forward" size={20} color="#777"/>
-                </TouchableOpacity>
+                {mutualFriendsSize > 0 && (
+                    <TouchableOpacity onPress={handleMutualFriendsDisplay}>
+                        <Ionicons name="chevron-forward" size={20} color="#777"/>
+                    </TouchableOpacity>
+                )}
             </View>
+
 
             <View style={styles.connectionItem}>
                 <View style={styles.connectionIconContainer}>
                     <Ionicons name="grid-outline" size={20} color="#6C63FF"/>
                 </View>
                 <View style={styles.connectionInfo}>
-                    <Text style={styles.connectionTitle}>{mutualGroups} mutual groups</Text>
+                    <Text style={styles.connectionTitle}>0 mutual groups</Text>
                     <Text style={styles.connectionSubtitle}>Tech Enthusiasts, Photography Club</Text>
                 </View>
-                <TouchableOpacity>
-                    <Ionicons name="chevron-forward" size={20} color="#777"/>
-                </TouchableOpacity>
+                {mutualGroups > 0 &&
+                    <TouchableOpacity>
+                        <Ionicons name="chevron-forward" size={20} color="#777"/>
+                    </TouchableOpacity>
+                }
             </View>
         </View>
     );
@@ -241,12 +281,6 @@ const styles = StyleSheet.create({
     coverPhoto: {
         width: '100%',
         height: '100%',
-    },
-    backButtonContainer: {
-        position: 'absolute',
-        top: Platform.OS === 'ios' ? 10 : 40,
-        left: 20,
-        zIndex: 10,
     },
     buttonView: {
         flexDirection: 'row',
