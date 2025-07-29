@@ -1,19 +1,19 @@
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View, StatusBar } from "react-native";
-import { router } from "expo-router";
+import React, {useState} from "react";
+import {StatusBar, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {router} from "expo-router";
 import SocialAccounts from "../../components/SocialAccounts";
-import { signInWithApple, useGoogleOAuth } from "../../hooks/Oauth";
+import {signInWithApple, useGoogleOAuth} from "../../hooks/Oauth";
 import Toast from "react-native-toast-message";
 
 const Welcome = () => {
-    
-    const { googlePromptAsync } = useGoogleOAuth();
 
-    const navigateToSignIn = () => router.push('/SignIn');
+    const {googlePromptAsync} = useGoogleOAuth()
+    const navigateToSignIn = () => router.push('/SignIn')
+    const [disabled, setDisabled] = useState(false)
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" />
+            <StatusBar barStyle="light-content"/>
             <View style={styles.gradient}>
                 <View style={styles.contentContainer}>
                     <View style={styles.headerView}>
@@ -33,7 +33,8 @@ const Welcome = () => {
                             <Text style={styles.buttonText}>Create an Account</Text>
                         </TouchableOpacity>
 
-                        <SocialAccounts googlePromptAsync={googlePromptAsync} appleSignIn={signInWithApple} />
+                        <SocialAccounts googlePromptAsync={googlePromptAsync} appleSignIn={signInWithApple}
+                                        disabled={disabled}/>
 
                         <View style={styles.signInContainer}>
                             <Text style={styles.footerText}>Already have an account?</Text>
@@ -51,7 +52,7 @@ const Welcome = () => {
                     </View>
                 </View>
             </View>
-            <Toast topOffset={64} />
+            <Toast topOffset={64}/>
         </View>
     );
 }
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 15,
         textShadowColor: 'rgba(0, 0, 0, 0.3)',
-        textShadowOffset: { width: 1, height: 1 },
+        textShadowOffset: {width: 1, height: 1},
         textShadowRadius: 5,
     },
     subHeadView: {
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '90%',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.3,
         shadowRadius: 6,
         elevation: 8,
