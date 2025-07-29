@@ -60,7 +60,6 @@ const Page = () => {
                     </View>
                 </View>
                 {campusConnectModal && <CampusConnectModal campusConnectModal={campusConnectModal}
-
                                                            handleCampusConnectModal={handleCampusConnectModal}/>}
             </ScrollView>
         </SafeAreaView>
