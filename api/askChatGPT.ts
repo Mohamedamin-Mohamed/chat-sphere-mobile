@@ -1,11 +1,10 @@
 import {Conversation, EmbeddingType} from "../types/types";
+import api from "./api";
 
 const askChatGPT = async (request: EmbeddingType[], question: string, lastQuestions: Conversation[], controller: AbortController) => {
     lastQuestions.sort((a, b) => {
         return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     })
-
-    const url = process.env.EXPO_PUBLIC_BACKEND_URL
 
     const chatSphereBio = process.env.EXPO_PUBLIC_CHATSPHERE_BIO
     const header = process.env.EXPO_PUBLIC_HEADER_MESSAGE
@@ -32,15 +31,7 @@ const askChatGPT = async (request: EmbeddingType[], question: string, lastQuesti
         {role: 'user', content: question}
     ]
 
-    return await fetch(`${url}/api/chat/completions`, {
-        method: 'POST',
-        headers: {
-            'Content-type': 'application/json',
-        },
-        body: JSON.stringify(messages),
-        signal: controller.signal
-    })
-
+    return await api.post('api/chat/completions', messages)
 }
 
 export default askChatGPT
