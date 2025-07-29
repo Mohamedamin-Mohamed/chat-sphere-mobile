@@ -16,7 +16,7 @@ const Page = () => {
         setRefreshing(true)
         setTimeout(() => {
             setRefreshing(false)
-        }, 2000)
+        }, 1000)
     }
 
     return (
@@ -60,7 +60,6 @@ const Page = () => {
                     </View>
                 </View>
                 {campusConnectModal && <CampusConnectModal campusConnectModal={campusConnectModal}
-
                                                            handleCampusConnectModal={handleCampusConnectModal}/>}
             </ScrollView>
         </SafeAreaView>

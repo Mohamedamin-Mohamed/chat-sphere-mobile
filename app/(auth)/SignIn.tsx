@@ -14,15 +14,18 @@ import {router} from "expo-router";
 import React, {useRef, useState} from "react";
 import SocialAccounts from "../../components/SocialAccounts";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import signIn from "../../api/signIn";
 import {Error} from "../../types/types";
 import emailValidation from "../../utils/emailValidation";
 import {useNavigation, usePreventRemove} from "@react-navigation/native";
 import {signInWithApple, useGoogleOAuth} from "../../hooks/Oauth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useDispatch} from "react-redux";
 import {setUserInfo} from "../../redux/userSlice";
 import sanitizeUser from "../../utils/sanitizeUser";
+import storeToken from "../../utils/storeToken";
+import api from "../../api/api";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-toast-message";
 
 interface SignIn {
     email: string;
@@ -32,6 +35,7 @@ interface SignIn {
 const SignIn = () => {
     const {googlePromptAsync} = useGoogleOAuth();
     const dispatch = useDispatch();
+    const [disabled, setDisabled] = useState(false)
     const signInCompletedRef = useRef<boolean>(false);
     const [loading, setLoading] = useState(false);
     const initialSignInDetails = {email: '', password: ''};
@@ -64,24 +68,36 @@ const SignIn = () => {
         try {
             setLoading(true);
             setErr({});
-            const response = await signIn(signInDetails, new AbortController());
+            const response = await api.post('auth/signin/email', signInDetails)
+            const data = response.data;
+            const user = data.user;
+            const message = data.message
+            const token = data.token;
+            await storeToken(token)
 
-            if (response.ok) {
-                const data = await response.json();
-                const user = await data.user;
+            const sanitized = sanitizeUser(user);
+            Toast.show({
+                type: "success",
+                text1: message,
+                onShow: () => setDisabled(true),
+                onHide: () => setDisabled(false)
+            });
+            signInCompletedRef.current = true;
 
-                const sanitized = sanitizeUser(user);
-                signInCompletedRef.current = true;
+            dispatch(setUserInfo(sanitized));
+            router.replace('/home');
 
-                await AsyncStorage.setItem('user', JSON.stringify(sanitized));
-                dispatch(setUserInfo(sanitized));
-                router.replace('/chat');
+
+        } catch (exp: any) {
+            if (axios.isAxiosError(exp) && exp.response) {
+                const message = exp.response.data
+                const status = exp.response.status
+                console.log(message)
+                setErr(status === 404 ? {email: message} : {password: message});
+                return
             } else {
-                const message = await response.text();
-                setErr(response.status === 404 ? {email: message} : {password: message});
+                console.log(err)
             }
-        } catch (err) {
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -171,11 +187,11 @@ const SignIn = () => {
                         </View>
                         {err.password && <Text style={styles.errorMessage}>{err.password}</Text>}
 
-                        <TouchableOpacity onPress={handleEmailLookup}>
+                        <TouchableOpacity disabled={disabled} onPress={handleEmailLookup}>
                             <Text style={styles.forgotPassword}>Forgot your password?</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={handleSiginIn} style={styles.signInButton}>
+                        <TouchableOpacity disabled={disabled} onPress={handleSiginIn} style={styles.signInButton}>
                             {loading
                                 ? <ActivityIndicator size="small" color="#fff"/>
                                 : <Text style={styles.signInText}>Sign in</Text>}
@@ -183,12 +199,13 @@ const SignIn = () => {
 
                         <View style={styles.footer}>
                             <Text style={styles.footerText}>Don't have an account?</Text>
-                            <TouchableOpacity onPress={() => router.replace("/SignUp")}>
+                            <TouchableOpacity disabled={disabled} onPress={() => router.replace("/SignUp")}>
                                 <Text style={styles.linkText}>Sign up</Text>
                             </TouchableOpacity>
                         </View>
-                        <SocialAccounts googlePromptAsync={googlePromptAsync} appleSignIn={signInWithApple}/>
+                        <SocialAccounts disabled={disabled} googlePromptAsync={googlePromptAsync} appleSignIn={signInWithApple}/>
                     </View>
+                    <Toast topOffset={64}/>
                 </View>
             </TouchableWithoutFeedback>
         </ScrollView>

@@ -1,5 +1,7 @@
 import {Tabs, useNavigation} from "expo-router";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import {Ionicons} from "@expo/vector-icons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons"
+import Feather from "@expo/vector-icons/Feather"
 
 const DrawerLayout = () => {
     const navigation = useNavigation()
@@ -44,60 +46,72 @@ const DrawerLayout = () => {
                     marginHorizontal: 4,
                 },
                 tabBarInactiveBackgroundColor: "transparent",
-                tabBarIcon: ({color, size, focused}) => {
-                    let iconName;
-
-                    if (route.name === 'profile') {
-                        iconName = 'person';
-                    } else if (route.name === 'chat') {
-                        iconName = 'forum';
-                    } else if (route.name === 'chatbot') {
-                        iconName = 'assistant';
-                    } else if (route.name === 'search') {
-                        iconName = 'search';
-                    } else {
-                        iconName = 'explore';
-                    }
-
-                    const activeSize = focused ? size + 2 : size;
-
-                    return <Icon name={iconName} color={color} size={activeSize}/>;
-                },
             })}
         >
             <Tabs.Screen
-                name="chat"
+                name="home"
                 options={{
-                    title: "Chat",
-                    tabBarLabel: "Chat"
+                    title: "Home",
+                    tabBarLabel: "Home",
+                    tabBarIcon: ({color, size, focused}) => {
+                        const activeSize = focused ? size + 2 : size
+                        return <Feather name="message-square" size={activeSize} color={color}/>
+                    }
+                }}
+            />
+            <Tabs.Screen
+                name="userchat"
+                options={{
+                    title: "Message",
+                    tabBarLabel: "Chats",
+                    tabBarIcon: ({color, size, focused}) => {
+                        const activeSize = focused ? size + 2 : size
+                        return <MaterialIcons name='chat' color={color} size={activeSize}/>
+                    }
                 }}
             />
             <Tabs.Screen
                 name="search"
                 options={{
                     title: "Search",
-                    tabBarLabel: "Search"
+                    tabBarLabel: "Search",
+                    tabBarIcon: ({color, size, focused}) => {
+                        const activeSize = focused ? size + 2 : size
+                        return <MaterialIcons name='person-search' color={color} size={activeSize}/>;
+                    }
                 }}
             />
             <Tabs.Screen
                 name="chatbot"
                 options={{
                     title: "Assistant",
-                    tabBarLabel: "Assistant"
+                    tabBarLabel: "AI Assistant",
+                    tabBarIcon: ({color, size, focused}) => {
+                        const activeSize = focused ? size + 2 : size
+                        return <Ionicons name='chatbubbles-outline' color={color} size={activeSize}/>;
+                    }
                 }}
             />
-            <Tabs.Screen
-                name="discover"
-                options={{
-                    title: "Discover",
-                    tabBarLabel: "Discover"
-                }}
-            />
+            {/*<Tabs.Screen*/}
+            {/*    name="discover"*/}
+            {/*    options={{*/}
+            {/*        title: "Discover",*/}
+            {/*        tabBarLabel: "Discover",*/}
+            {/*        tabBarIcon: ({color, size, focused}) => {*/}
+            {/*            const activeSize = focused ? size + 2 : size*/}
+            {/*            return <Ionicons name='compass-outline' color={color} size={activeSize}/>;*/}
+            {/*        }*/}
+            {/*    }}*/}
+            {/*/>*/}
             <Tabs.Screen
                 name="profile"
                 options={{
                     title: "Profile",
-                    tabBarLabel: "Profile"
+                    tabBarLabel: "Profile",
+                    tabBarIcon: ({color, size, focused}) => {
+                        const activeSize = focused ? size + 2 : size
+                        return <Ionicons name='person-outline' color={color} size={activeSize}/>;
+                    }
                 }}
             />
         </Tabs>

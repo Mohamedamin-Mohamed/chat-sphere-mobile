@@ -25,11 +25,12 @@ import AccountInfo from "./AccountInfo";
 import emailValidation from "../../../utils/emailValidation";
 import EmailNotValidModal from "../../../modals/EmailNotValidModal";
 import EmptyNameModal from "../../../modals/EmptyNameModal";
-import updateProfile from "../../../api/updateProfile";
 import Toast from "react-native-toast-message";
 import {setUserInfo} from "../../../redux/userSlice";
 import sanitizeUser from "../../../utils/sanitizeUser";
-import getUserStats from "../../../api/getUserStats";
+import api from "../../../api/api";
+import axios from "axios";
+import updateProfile from "../../../api/updateProfile";
 
 const Page = () => {
     const userInfo = useSelector((state: RootState) => state.userInfo);
@@ -66,40 +67,33 @@ const Page = () => {
     const [userStats, setUserStats] = useState<UserStats>({followers: "-", followings: "-"})
 
     const imagePicker = async () => {
-        Alert.alert(
-            "Grant Chat Sphere photo access?",
-            "Chat Sphere would like to access your photo library to help you share pictures in your chats.",
-            [
-                {text: "Cancel", style: "cancel"},
-                {
-                    text: "Ok",
-                    style: "default",
-                    onPress: async () => {
-                        let result = await ImagePicker.launchImageLibraryAsync({
-                            mediaTypes: ['images'],
-                            allowsEditing: true,
-                            aspect: [4, 3],
-                            quality: 1,
-                        });
-                        if (!result.canceled && result.assets && result.assets.length > 0) {
-                            const asset = result.assets[0];
-                            const {uri, mimeType, fileSize} = asset;
-                            let fileName = asset.fileName;
-                            if (!fileName && uri) {
-                                fileName = uri.split('/').pop() || `image.${mimeType?.split('/')[1] || 'jpg'}`;
-                            }
-                            if (fileName && uri && mimeType && fileSize) {
-                                setProfilePictureDetails(prevState => ({
-                                    ...prevState,
-                                    fileName,
-                                    file: {uri, mimeType, fileSize}
-                                }));
-                            }
-                        }
-                    }
-                }
-            ]
-        );
+        const permGranted = await ImagePicker.requestCameraPermissionsAsync()
+        if (!permGranted.granted) {
+            Alert.alert('Permission Required', 'You need to allow access to upload your profile picture')
+            return
+        }
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
+        });
+        //perform image compression
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+            const asset = result.assets[0];
+            const {uri, mimeType, fileSize} = asset;
+            let fileName = asset.fileName;
+            if (!fileName && uri) {
+                fileName = uri.split('/').pop() || `image.${mimeType?.split('/')[1] || 'jpg'}`;
+            }
+            if (fileName && uri && mimeType && fileSize) {
+                setProfilePictureDetails(prevState => ({
+                    ...prevState,
+                    fileName,
+                    file: {uri, mimeType, fileSize}
+                }));
+            }
+        }
     };
 
     const handleDisplayAvatarModal = () => {
@@ -135,9 +129,9 @@ const Page = () => {
             phoneNumber: phoneNumber
         }
 
+
         try {
             setLoading(true)
-
             const response = await updateProfile(request, new AbortController())
             const succeeded = response.ok
 
@@ -151,9 +145,8 @@ const Page = () => {
                 const text = await response.text();
                 showToastMessage(false, text);
             }
-
-        } catch (err) {
-            console.error(err)
+        } catch (exp: any) {
+            console.error(exp)
         } finally {
             setLoading(false)
         }
@@ -275,15 +268,23 @@ const Page = () => {
 
     useEffect(() => {
         const loadUserStats = async () => {
-            const response = await getUserStats(email, new AbortController())
-            if (response.ok) {
-                const userStats = await response.json()
-                console.log(userStats)
+            try {
+                const response = await api.get(`api/users/stats`, {
+                    params: {email},
+                })
+                const userStats = response.data
                 setUserStats(userStats)
+            } catch (exp: any) {
+                if (axios.isAxiosError(exp) && exp.response) {
+                    const message = exp.response.statusText
+                    console.log('An error occurred while fetching user stats: ', message)
+
+                }
             }
         }
         loadUserStats().catch(err => console.error(err))
     }, []);
+
 
     const renderUserStats = () => (
         <View style={styles.statsContainer}>
@@ -419,6 +420,7 @@ const Page = () => {
                 {viewProfileModal && (
                     <ViewProfileModal
                         image={profilePictureDetails.file.uri}
+                        viewProfileModal={viewProfileModal}
                         setViewProfileModal={setViewProfileModal}
                         fullName={fullName}
                         abbrevName={abbrevName}

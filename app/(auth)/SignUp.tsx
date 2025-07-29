@@ -17,12 +17,18 @@ import React, {useRef, useState} from "react";
 import {UserSignUp} from "../../types/types";
 import Toast from "react-native-toast-message";
 import emailValidation from "../../utils/emailValidation";
-import signUp from "../../api/signUp";
 import {signInWithApple, useGoogleOAuth} from "../../hooks/Oauth";
 import {usePreventRemove} from "@react-navigation/native";
+import sanitizeUser from "../../utils/sanitizeUser";
+import {setUserInfo} from "../../redux/userSlice";
+import {useDispatch} from "react-redux";
+import api from "../../api/api";
+import axios from "axios";
 
 const SignUp = () => {
     const {googlePromptAsync} = useGoogleOAuth();
+    const dispatch = useDispatch()
+
     const signUpCompletedRef = useRef(false);
     const navigation = useNavigation();
 
@@ -79,24 +85,46 @@ const SignUp = () => {
 
         try {
             setLoading(true);
-            const signUpResponse = await signUp(signUpDetails, new AbortController());
-            const message = await signUpResponse.text();
-            const isSuccess = signUpResponse.ok;
+
+            const controller = new AbortController();
+            const response = await api.post(
+                'auth/signup/email',
+                signUpDetails,
+                {signal: controller.signal}
+            )
+
+            const data = response.data;
+            const message = data.message || "Sign up successful";
+
+            const user = data.user;
+            if (user) {
+                const sanitizedUser = sanitizeUser(user);
+                dispatch(setUserInfo(sanitizedUser));
+            }
 
             signUpCompletedRef.current = true;
 
             Toast.show({
-                type: isSuccess ? "success" : "error",
+                type: "success",
                 text1: message,
-                ...(isSuccess ? {text2: "Redirecting"} : {}),
+                text2: "Redirecting",
                 onShow: () => setDisabled(true),
                 onHide: () => {
                     setDisabled(false);
-                    isSuccess && router.replace("SignIn");
+                    router.replace("SignIn");
                 }
-            })
+            });
+
         } catch (err: any) {
-            if (err.name === "AbortError") {
+            if (axios.isAxiosError(err) && err.response) {
+                const message = err.response.data || "An error occurred";
+                Toast.show({
+                    type: "error",
+                    text1: message,
+                    onShow: () => setDisabled(true),
+                    onHide: () => setDisabled(false)
+                });
+            } else if (err.name === "AbortError") {
                 console.log("Abort error");
             } else {
                 console.error(err);
@@ -231,6 +259,7 @@ const SignUp = () => {
                         </View>
 
                         <SocialAccounts
+                            disabled={disabled}
                             googlePromptAsync={googlePromptAsync}
                             appleSignIn={signInWithApple}
                         />

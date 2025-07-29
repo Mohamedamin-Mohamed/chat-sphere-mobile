@@ -15,8 +15,9 @@ import React, {useState} from "react";
 import Toast from "react-native-toast-message";
 import {useSelector} from "react-redux";
 import {RootState} from "../../../types/types";
-import resetPassword from "../../../api/resetPassword";
 import PasswordResetScreen from "../../../components/PasswordResetScreen";
+import api from "../../../api/api";
+import axios from "axios";
 
 type PasswordType = {
     currentPassword: string;
@@ -97,12 +98,16 @@ const Index = () => {
             newPassword: passwordDetails.newPassword
         }
         try {
-            const response = await resetPassword(request, new AbortController());
-            const succeeded = response.ok;
-            const message = await response.text();
-            showToastMessage(message, succeeded)
+            const response = await api.post('auth/signin/password/reset', request)
+            const message = response.data;
+            showToastMessage(message, true)
         } catch (err) {
-            console.error(err)
+            if (axios.isAxiosError(err) && err.response) {
+                const message = err.response.data || "An error occurred";
+                showToastMessage(message, false)
+            } else {
+                console.error("Unexpected error:", err);
+            }
         } finally {
             setLoading(false)
         }
@@ -117,7 +122,6 @@ const Index = () => {
     };
 
     const showToastMessage = (message: string, succeeded: boolean) => {
-        console.log(succeeded)
         Toast.show({
             type: succeeded ? 'success' : 'error',
             text1: message,
@@ -162,24 +166,38 @@ const Index = () => {
 
         try {
             setLoading(true);
-            const request = {email: email, password: passwords.password};
-            const response = await resetPassword(request, new AbortController());
-            const succeeded = response.ok;
-            const message = await response.text();
 
+            const request = {
+                email: email,
+                password: passwords.password
+            }
+
+            const response = await api.post(
+                'auth/signin/password/reset',
+                request,
+                {signal: new AbortController().signal}
+            )
+
+            const message = response.data || "Password reset successful";
             Toast.show({
-                type: succeeded ? "success" : "error",
+                type: "success",
                 text1: message,
-                ...(succeeded && {text2: 'Redirecting'}),
+                text2: "Redirecting",
                 onShow: () => setDisabled(true),
                 onHide: () => {
                     handleModalDisplay();
                     setDisabled(false);
-                    router.back()
+                    router.back();
                 }
             });
-        } catch (err) {
-            console.error(err);
+
+        } catch (err: any) {
+            if (axios.isAxiosError(err) && err.response) {
+                const message = err.response.data || "An error occurred";
+                showToastMessage(message, false)
+            } else {
+                console.error("Unexpected error:", err);
+            }
         } finally {
             setLoading(false);
         }
@@ -253,7 +271,7 @@ const Index = () => {
                     </View>
                     <View style={styles.buttonsView}>
                         <TouchableOpacity
-                            disabled={loading}
+                            disabled={loading || disabled}
                             style={styles.changePassword}
                             activeOpacity={0.9}
                             onPress={handleChangePassword}>
@@ -263,6 +281,7 @@ const Index = () => {
 
                         </TouchableOpacity>
                         <TouchableOpacity
+                            disabled={disabled}
                             style={styles.forgotPassword}
                             activeOpacity={0.9}
                             onPress={handleForgotPassword}>

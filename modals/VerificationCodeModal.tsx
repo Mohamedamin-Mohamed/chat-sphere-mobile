@@ -2,12 +2,11 @@ import {useCallback, useRef, useState} from "react";
 import {Modal, StyleSheet, TextInput, View} from "react-native";
 import Toast from "react-native-toast-message";
 import {router} from "expo-router";
-import verifyCode from "../api/verifyCode";
-import emailLookup from "../api/emailLookup";
-import resetPassword from "../api/resetPassword";
 import emailValidation from "../utils/emailValidation";
 import CodeVerificationUI from "../components/CodeVerificationUI";
 import PasswordResetUI from "../components/PasswordResetUI";
+import api from "../api/api";
+import axios from "axios";
 
 type VerificationCodeState = Record<number, string>;
 
@@ -92,16 +91,23 @@ const VerificationCodeModal = ({
 
         try {
             setLoading(true);
-            const response = await emailLookup(email, new AbortController());
-            const message = await response.text();
 
-            if (!response.ok) {
+            const controller = new AbortController();
+            const response = await api.get(`auth/email_lookup/generate_code`, {
+                params: {email},
+                signal: controller.signal,
+            });
+
+            const message = response.data?.message || 'Success';
+            showToast(message, 'success');
+
+        } catch (err: any) {
+            if (axios.isAxiosError(err) && err.response) {
+                const message = err.response.data?.message || 'Something went wrong';
                 showToast(message, 'error');
             } else {
-                showToast(message, 'success');
+                console.error('Unexpected error:', err);
             }
-        } catch (err) {
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -118,25 +124,26 @@ const VerificationCodeModal = ({
 
         try {
             setLoading(true);
-            const response = await verifyCode(email, code, new AbortController());
+            const response = await api.get(`auth/signin/verify`, {
+                params: {email, code}
+            })
+            const message = response.data
+            Toast.show({
+                type: 'success',
+                text1: message,
+                text2: 'Redirecting',
+                onShow: () => setDisabled(true),
+                onHide: () => {
+                    setDisabled(false)
+                    setPasswordResetModal(true)
+                }
+            });
 
-            if (!response.ok) {
-                const message = await response.text();
-                setVerificationError(message);
-            } else {
-                Toast.show({
-                    type: 'success',
-                    text1: 'Verified, reset your password',
-                    text2: 'Redirecting',
-                    onShow: () => setDisabled(true),
-                    onHide: () => {
-                        setDisabled(false)
-                        setPasswordResetModal(true)
-                    }
-                });
+        } catch (exp: any) {
+            if (axios.isAxiosError(exp) && exp.response) {
+                const message = exp.response.data
+                setVerificationError(message)
             }
-        } catch (err) {
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -183,28 +190,48 @@ const VerificationCodeModal = ({
 
         try {
             setLoading(true);
-            const request = {email: email, password: passwords.password};
-            const response = await resetPassword(request, new AbortController());
-            const succeeded = response.ok;
-            const message = await response.text();
+
+            const request = {
+                email: email,
+                password: passwords.password
+            }
+
+            const response = await api.post(
+                'auth/signin/password/reset',
+                request,
+                {signal: new AbortController().signal}
+            );
+
+            const message = response.data?.message || "Password reset successful";
 
             Toast.show({
-                type: succeeded ? "success" : "error",
+                type: "success",
                 text1: message,
-                ...(succeeded && {text2: 'Redirecting'}),
+                text2: "Redirecting",
                 onShow: () => setDisabled(true),
                 onHide: () => {
                     handleModalDisplay();
                     setDisabled(false);
-                    succeeded && router.replace("/SignIn")
+                    router.replace("/SignIn");
                 }
             });
-        } catch (err) {
-            console.error(err);
+
+        } catch (err: any) {
+            if (axios.isAxiosError(err) && err.response) {
+                const message = err.response.data?.message || "An error occurred";
+                Toast.show({
+                    type: "error",
+                    text1: message,
+                    onShow: () => setDisabled(true),
+                    onHide: () => setDisabled(false)
+                });
+            } else {
+                console.error("Unexpected error:", err);
+            }
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     return (
         <Modal transparent={true} visible={true} animationType="slide">

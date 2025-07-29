@@ -5,7 +5,7 @@ export type User = {
     picture: string | null
     createdAt: string,
     bio: string,
-    phoneNumber: string
+    phoneNumber: string,
 }
 
 export type UserSignUp = {
@@ -84,8 +84,10 @@ export type SearchUser = {
     isOnline: boolean,
     followerSize: number,
     followingSize: number,
-    followingRequester: boolean,
-    followedByRequester: boolean,
+    isFollowedByRequester: boolean,
+    isFollowingRequester: boolean,
+    mutualFriendsSize: number,
+    topThreeMutualFriends: User[]
 }
 
 export type FollowInteraction = {

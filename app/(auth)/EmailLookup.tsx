@@ -13,9 +13,10 @@ import {
 } from "react-native"
 import Icon from "react-native-vector-icons/MaterialIcons";
 import emailValidation from "../../utils/emailValidation";
-import emailLookup from "../../api/emailLookup";
 import Toast from "react-native-toast-message";
 import VerificationCodeModal from "../../modals/VerificationCodeModal";
+import api from "../../api/api";
+import axios from "axios";
 
 enum ResetFlow {
     EmailLookup,
@@ -34,45 +35,60 @@ const EmailLookup = () => {
 
     const handleEmailLookup = async () => {
         if (!email) {
-            setErr({email: "Email is required"})
-            return
+            setErr({email: "Email is required"});
+            return;
         } else if (!emailValidation(email)) {
-            setErr({email: "Email is not valid"})
-            return
+            setErr({email: "Email is not valid"});
+            return;
         }
-        setErr({})
+
+        setErr({});
+        setLoading(true);
+
         try {
-            setLoading(true)
-            const response = await emailLookup(email, new AbortController());
-            const message = await response.text()
-            if (!response.ok) {
-                if (response.status === 404) {
-                    setErr({email: message})
+            const controller = new AbortController();
+            const response = await api.get(
+                `auth/signin/email_lookup/generate_code`,
+                {
+                    params: {email},
+                    signal: controller.signal,
+                }
+            );
+
+            const message = response.data || "Success";
+
+            Toast.show({
+                type: 'success',
+                text1: message,
+                onShow: () => setDisabled(true),
+                onHide: () => {
+                    setDisabled(false);
+                    setCurrentFlowStep(ResetFlow.Verification);
+                }
+            });
+
+        } catch (err: any) {
+            if (axios.isAxiosError(err) && err.response) {
+                const status = err.response.status;
+                const message = err.response.data || "Something went wrong";
+
+                if (status === 404) {
+                    setErr({email: message});
                 } else {
                     Toast.show({
                         type: 'error',
                         text1: message,
                         onShow: () => setDisabled(true),
                         onHide: () => setDisabled(false)
-                    })
+                    });
                 }
             } else {
-                Toast.show({
-                    type: 'success',
-                    text1: message,
-                    onShow: () => setDisabled(true),
-                    onHide: () => {
-                        setDisabled(false)
-                        setCurrentFlowStep(ResetFlow.Verification)
-                    }
-                })
+                console.error("Unexpected error:", err);
             }
-        } catch (err) {
-            console.error(err)
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     const handleModalCancel = () => {
         setCurrentFlowStep(ResetFlow.EmailLookup)

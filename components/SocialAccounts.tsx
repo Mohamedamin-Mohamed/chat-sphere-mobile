@@ -6,14 +6,12 @@ import {useDispatch} from "react-redux";
 import {UnknownAction} from "redux";
 
 interface SocialAccountsProps {
-    googlePromptAsync: () => Promise<AuthSessionResult>;
-    appleSignIn: (dispatch: Dispatch<UnknownAction>) => Promise<void>;
+    googlePromptAsync: () => Promise<AuthSessionResult>,
+    appleSignIn: (dispatch: Dispatch<UnknownAction>) => Promise<void>,
+    disabled: boolean
 }
 
-const SocialAccounts: React.FC<SocialAccountsProps> = ({
-                                                           googlePromptAsync,
-                                                           appleSignIn,
-                                                       }) => {
+const SocialAccounts: React.FC<SocialAccountsProps> = ({googlePromptAsync, appleSignIn, disabled}) => {
     const dispatch = useDispatch()
     const [googlePressed, setGooglePressed] = useState(false);
     const [applePressed, setApplePressed] = useState(false);
@@ -38,6 +36,7 @@ const SocialAccounts: React.FC<SocialAccountsProps> = ({
 
             <View style={styles.socialButtonsContainer}>
                 <TouchableOpacity
+                    disabled={disabled}
                     onPress={() => googlePromptAsync()}
                     onPressIn={() => handlePressIn('google')}
                     onPressOut={() => handlePressOut('google')}
@@ -53,6 +52,7 @@ const SocialAccounts: React.FC<SocialAccountsProps> = ({
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    disabled={disabled}
                     onPress={() => appleSignIn(dispatch)}
                     onPressIn={() => handlePressIn('apple')}
                     onPressOut={() => handlePressOut('apple')}
