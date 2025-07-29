@@ -8,6 +8,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import {CommonActions} from "@react-navigation/native";
 import ConfirmSignOutModal from "../../../modals/ConfirmSignOutModal";
 import {clearUserInfo} from "../../../redux/userSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Page = () => {
     const ButtonsList: Buttons[] = [
@@ -30,9 +31,10 @@ const Page = () => {
         setShowSignOutModal(true);
     }
 
-    const confirmSignOut = () => {
+    const confirmSignOut = async () => {
         dispatch(clearUserInfo())
         setShowSignOutModal(false);
+        await AsyncStorage.removeItem("token")
         navigation.dispatch(CommonActions.reset({
             index: 0,
             routes: [
@@ -90,14 +92,14 @@ const Page = () => {
                             onPress={() => handleProfileView(item)}
                         >
                             <View style={styles.iconContainer}>
-                                <Icon name={item.icon} size={22} color="#4F46E5" />
+                                <Icon name={item.icon} size={22} color="#4F46E5"/>
                             </View>
                             <Text style={styles.menuItemText}>{item.name}</Text>
-                            <Icon name="chevron-right" size={22} color="#9CA3AF" style={styles.chevronIcon} />
+                            <Icon name="chevron-right" size={22} color="#9CA3AF" style={styles.chevronIcon}/>
                         </TouchableOpacity>
                     ))}
 
-                    <View style={styles.divider} />
+                    <View style={styles.divider}/>
 
                     <TouchableOpacity
                         style={styles.menuItem}
@@ -105,7 +107,7 @@ const Page = () => {
                         onPress={handleSignOut}
                     >
                         <View style={[styles.iconContainer, styles.signOutIconContainer]}>
-                            <Icon name="exit-to-app" size={22} color="#EF4444" />
+                            <Icon name="exit-to-app" size={22} color="#EF4444"/>
                         </View>
                         <Text style={styles.signOutText}>Sign out</Text>
                     </TouchableOpacity>
@@ -114,6 +116,7 @@ const Page = () => {
                 {viewProfileModal &&
                     <ViewProfileModal
                         image={image}
+                        viewProfileModal={viewProfileModal}
                         setViewProfileModal={setViewProfileModal}
                         fullName={fullName}
                         abbrevName={abbrevName}
@@ -163,7 +166,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
@@ -186,7 +189,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         borderRadius: 30,
         shadowColor: '#4F46E5',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.2,
         shadowRadius: 3,
         elevation: 2,
@@ -217,7 +220,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         borderRadius: 12,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 1,
