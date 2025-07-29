@@ -40,6 +40,7 @@ const SearchBar = () => {
                     const data = await response.data
                     setUsers(data)
                 } catch (exp) {
+                    //maybe implement checking if the exception is an axios one and then having a toast message for that
                     console.error('Something went wrong: ', exp)
                 } finally {
                     setLoading(false)
