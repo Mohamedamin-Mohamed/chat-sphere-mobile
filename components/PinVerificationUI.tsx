@@ -49,8 +49,8 @@ const PinVerificationUI = ({setShowPinVerificationModal, phoneNumber, email}: Pi
     };
 
     const handlePinVerification = async () => {
-        const pin = Object.values(verificationPin).join("");
-        if (pin.length !== 6) {
+        const code = Object.values(verificationPin).join("");
+        if (code.length !== 6) {
             setVerificationError("Please enter all 6 digits");
             return;
         }
@@ -61,13 +61,12 @@ const PinVerificationUI = ({setShowPinVerificationModal, phoneNumber, email}: Pi
         try {
             setLoading(true);
             const request = {
-                email: email, phoneNumber: "+1" + phoneNumber, pin: pin
+                email: email, phoneNumber: "+1" + phoneNumber, code: code
             }
             const response = await api.post('api/twilio/code/verify', request)
-            const responseJson = await response.data
-            const succeeded = responseJson.success
-            const message = responseJson.message
-
+            const data = await response.data
+            const succeeded = data.success
+            const message = data.message
             if (!succeeded) {
                 setVerificationError(message);
             } else {
@@ -75,12 +74,14 @@ const PinVerificationUI = ({setShowPinVerificationModal, phoneNumber, email}: Pi
             }
         } catch (exp: any) {
             if (axios.isAxiosError(exp) && exp.response) {
-                const text = exp.response.statusText
-                showToastMessage(false, text)
-                return
+                const data = exp.response.data
+                const message = data.message
+                setVerificationError(message)
+            } else {
+                console.error(exp);
+                setVerificationError("Something went wrong.");
             }
-            console.error(exp);
-            setVerificationError("Something went wrong.");
+
         } finally {
             setLoading(false);
         }
@@ -94,6 +95,7 @@ const PinVerificationUI = ({setShowPinVerificationModal, phoneNumber, email}: Pi
                 setDisabled(false)
                 setShowPinVerificationModal(false)
                 if (succeeded) {
+                    console.log('Yeah it succeeded')
                     dispatch(setUserInfo({phoneNumber: phoneNumber}))
                     router.back()
                 }
