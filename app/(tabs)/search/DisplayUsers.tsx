@@ -1,16 +1,32 @@
-import {ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {
+    ActivityIndicator,
+    Image,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from "react-native";
 import {SearchUser} from "../../../types/types";
 import {router} from "expo-router";
 
-const DisplayUsers = ({users, loading}: { users: SearchUser[], loading: boolean }) => {
+interface DisplayUsersProps {
+    users: SearchUser[],
+    loading: boolean,
+    onRefresh: () => void
+}
+
+const DisplayUsers = ({users, loading, onRefresh}: DisplayUsersProps) => {
     return (
-        <ScrollView contentContainerStyle={styles.scrollView}>
+        <ScrollView contentContainerStyle={styles.scrollView}
+                    refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh}/>}>
             {loading ? (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#007AFF"/>
                     <Text style={styles.loadingText}>Searching users...</Text>
-                </View>
-            ) : users.length === 0 ? (
+                </View>) :
+                users.length === 0 ? (
                 <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>No users found</Text>
                 </View>
